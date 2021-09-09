@@ -1,0 +1,77 @@
+.x-button.btn.btn-primary.btn-sm{
+    margin: 0 10px;
+}
+
+.btn.btn-primary.btn-sm{
+    margin: 4px;
+}
+
+.x-controls-container{
+    background-color: #f4f4f4;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.x-controls-container .x-show-info{
+    display: inline-block;
+}
+
+.x-select{
+    margin-bottom: 8px;
+}
+
+.x-select .x-hint{
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+.x-container{
+    overflow: hidden;
+}
+
+.x-check-container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin: 0 -20px;
+}
+
+.x-check-wrapper{
+    display: inline-block;
+    margin: 4px 20px;
+}
+
+.x-check-wrapper label{
+    margin-bottom: 0;
+}
+
+.x-check-wrapper input{
+    margin-top: 0;
+    margin-bottom: 2px;
+}
+
+.x-show-info{
+    transform: translateY(5px);
+}
+
+.x-info-wrapper{
+    display: inline-block;
+    margin: 4px 10px;
+}
+
+.x-show-info .x-info-wrapper:last-of-type{
+    margin-right: 0;
+}
+
+.x-info-wrapper strong{
+    color: #0076c1;
+}
+
+.x-info-wrapper span{
+    font-weight: bold;
+}
+
+
