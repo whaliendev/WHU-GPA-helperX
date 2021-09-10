@@ -27,15 +27,15 @@
         "https://jwgl.whu.edu.cn/cjcx/cjcx_cxDgXscj.html*"
       ],
       "js": [
-        "content-script.js"
+        "js/content-script.js"
       ]
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "script.js",
-        "style.css"
+        "js/script.js",
+        "css/style.css"
       ],
       "matches": [
         "https://jwgl.whu.edu.cn/*"

@@ -31,6 +31,10 @@
     border: 1px solid #dddddd;
 }
 
+.x-controls-container.is-pinned{
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.26);
+}
+
 .x-controls-container .x-show-info{
     display: inline-block;
 }
