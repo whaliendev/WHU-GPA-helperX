@@ -16,7 +16,7 @@ $.ajaxSetup({
 $(document).ajaxComplete(customDynamicUI);
 
 /**
- * 触发查询按钮，获取全部成绩
+ * 触发查询按钮click事件，获取全部成绩
  */
 (function fetchScores() {
   $('#searchForm .chosen-select').first().val('');
@@ -52,7 +52,7 @@ function customDynamicUI() {
       $(this)
         .find('td:eq(3)')
         .html(
-          `<input type="checkbox" name="course-select" checked="checked" />`
+          `<input type="checkbox" name="x-course-select" checked="checked" />`
         );
 
       const courseCat = $.trim($(this).find('td:eq(5)').text());
@@ -67,7 +67,7 @@ function customDynamicUI() {
     } else {
       $(this)
         .find('td:eq(3)')
-        .html(`<input type="checkbox" name="course-select" />`);
+        .html(`<input type="checkbox" name="x-course-select" />`);
     }
   });
   if ($('#x-sel-all').length === 0) {
@@ -96,7 +96,7 @@ function customStaticUI(catsList) {
     catContent += `
             <div class="x-check-wrapper">
                 <label for="cat${i}">${unique[i]}</label>
-                <input type="checkbox" name="selbox" value="${unique[i]}" id="cat${i}" checked>
+                <input type="checkbox" name="x-selbox" value="${unique[i]}" id="x-cat${i}" checked>
             </div>
         `;
   }
@@ -113,13 +113,13 @@ function customStaticUI(catsList) {
             </div>
             <div class="x-show-info">
                 <div class="x-info-wrapper">
-                    <strong>总学分数：</strong><span class="x-info" id="credits">0.0</span>
+                    <strong>总学分数：</strong><span class="x-info" id="x-credits">0.0</span>
                 </div>
                 <div class="x-info-wrapper">
-                    <strong>平均GPA：</strong><span class="x-info" id="gpa">0.000</span>
+                    <strong>平均GPA：</strong><span class="x-info" id="x-gpa">0.000</span>
                 </div>
                 <div class="x-info-wrapper">
-                    <strong>平均成绩：</strong><span class="x-info" id="average-score">0.00</span>
+                    <strong>平均成绩：</strong><span class="x-info" id="x-average-score">0.00</span>
                 </div>
             </div>
         </div>
@@ -139,11 +139,11 @@ function getCellValue(row, index) {
 function comparator(indexes) {
   return function (a, b) {
     let ans = 0;
-    // console.log(indexes);
+
     for (let i = 0; i < indexes.length; i++) {
       let valA = getCellValue(a, indexes[i]),
         valB = getCellValue(b, indexes[i]);
-      //   console.log($.isNumeric(valA), valB);
+
       if ($.isNumeric(valA) && $.isNumeric(valB)) {
         ans = ans || valA - valB;
       } else {
@@ -163,35 +163,36 @@ function calcGPA(scores) {
     let credit = parseFloat($(this)[0]);
     let score = parseFloat($(this)[1]);
     let GPA = parseFloat($(this)[2]);
-    // if not NaN
+
     if (score) {
+      // if not NaN
       totalScore += score * credit;
       totalGPA += GPA * credit;
     }
     totalCredits += credit;
   });
-  //   console.log([totalCredits, totalGPA / totalCredits, totalScore / totalCredits]);
-  return [
-    totalCredits.toFixed(1),
-    (totalGPA / totalCredits).toFixed(3),
-    (totalScore / totalCredits).toFixed(2)
-  ];
+
+  let GPAMean = 0,
+    scoreMean = 0;
+
+  if (totalCredits !== 0) {
+    GPAMean = totalGPA / totalCredits;
+    scoreMean = totalScore / totalCredits;
+  }
+
+  return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(2)];
 }
 
 function calcSemGPA(year, sem) {
   let scores = [];
   $('table:eq(1) tr:gt(0)').each(function () {
-    // console.log($(this).find('td:eq(1)').text(), year);
-    // console.log(parseInt($(this).find('td:eq(2)').text()), sem);
     if (
       $(this).find('td:eq(1)').text() === year &&
       parseInt($(this).find('td:eq(2)').text()) === sem
     ) {
-      //   console.log('enter');
       // 学分，成绩，GPA
       let row = [];
-      if ($(this).find('input[name="course-select"]').is(':checked')) {
-        // console.log($(this[0]));
+      if ($(this).find('input[name="x-course-select"]').is(':checked')) {
         $(this)
           .find('td:eq(6), td:eq(7), td:eq(9)')
           .each(function () {
@@ -209,7 +210,7 @@ function updateHeaderScores() {
   let scores = [];
   $('table tr:gt(0)').each(function () {
     let row = [];
-    if ($(this).find('input[name="course-select"]').is(':checked')) {
+    if ($(this).find('input[name="x-course-select"]').is(':checked')) {
       $(this)
         .find('td:eq(6), td:eq(7), td:eq(9)')
         .each(function () {
@@ -221,9 +222,9 @@ function updateHeaderScores() {
 
   let info = calcGPA(scores);
 
-  $('#credits').text(info[0]);
-  $('#gpa').text(info[1]);
-  $('#average-score').text(info[2]);
+  $('#x-credits').text(info[0]);
+  $('#x-gpa').text(info[1]);
+  $('#x-average-score').text(info[2]);
 }
 
 function updateSemScores() {
@@ -235,7 +236,7 @@ function updateSemScores() {
       .nextUntil('tr.x-sem-row')
       .each(function () {
         let row = [];
-        if ($(this).find('input[name="course-select"]').is(':checked')) {
+        if ($(this).find('input[name="x-course-select"]').is(':checked')) {
           $(this)
             .find('td:eq(6), td:eq(7), td:eq(9)')
             .each(function () {
@@ -295,5 +296,52 @@ function sortScores() {
 }
 
 function bindEvents() {
-    $('input[name="course-select"]').change(()=> updateAllScores());
+  // 响应表格中的复选框
+  $('input[name="x-course-select"]').change(() => updateAllScores());
+
+  // 响应课程类别复选框
+  $('input[name="x-selbox"]').change((e) => {
+    const input = e.target;
+    $('table:eq(1) tr:gt(0)').each(function () {
+      if ($(this).find('td:eq(5)').text() === input.value) {
+        $(this)
+          .find('td:eq(3) input[name="x-course-select"]')
+          .prop('checked', input.checked);
+      }
+    });
+    updateAllScores();
+  });
+
+  // 全选/全不选，我也不知道这个意义是啥，但是李叶加了
+  $('#x-sel-all').click(() => {
+    if ($('input[name="x-course-select"]:checked').length === 0) {
+      $('input[name="x-course-select"]').prop('checked', true);
+      $('#x-sel-all').text('全不选');
+    } else {
+      $('input[name="x-course-select"]').prop('checked', false);
+      $('#x-sel-all').text('全选');
+    }
+    updateAllScores();
+  });
+
+  // 反选
+  $('#x-sel-rev').click(() => {
+    let checked = $('input[name="x-course-select"]:checked');
+    $('input[name="x-course-select"]:not(:checked)').prop('checked', true);
+    checked.prop('checked', false);
+    updateAllScores();
+  });
+
+  // 复原
+  $('#x-sel-revert').click(() => {
+    $('table:eq(1) tr:gt(0)').each(function () {
+      const score = parseFloat($(this).find('td:eq(7)').text());
+      if (score >= 60.0) {
+        $(this).find('td:eq(3) input:checkbox').prop('checked', true);
+      } else {
+        $(this).find('td:eq(3) input:checkbox').prop('checked', false);
+      }
+    });
+    updateAllScores();
+  });
 }
