@@ -3,7 +3,6 @@
   "description": "新教务系统也很难用，试试这个吧！",
   "version": "1.0.0",
   "manifest_version": 3,
-
   "host_permissions": [
     "https://jwgl.whu.edu.cn/*"
   ],
