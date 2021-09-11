@@ -88,7 +88,6 @@ function customStaticUI(catsList) {
         <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-rev">反选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-revert">复原</button>
-        <button class="x-button btn btn-primary btn-sm" id="x-show-graph">图表</button>
     `);
 
   const unique = [...new Set(catsList)].sort((a, b) => a.localeCompare(b));
