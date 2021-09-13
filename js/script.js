@@ -204,6 +204,7 @@ function sortScores() {
   bindEvents();
 }
 
+let plots = null;
 /**
  * 绑定各控件事件
  */
@@ -264,17 +265,22 @@ function bindEvents() {
   $('#x-show-graph').click(() => {
     $('#x-modal-overlay').addClass('x-open');
     updateStatistics();
-    let plots = drawStatisticPlot();
+    plots = drawStatisticPlot();
+  });
 
-    $('.x-modal').click(function (e) {
-      e.stopPropagation();
-    });
-    $('.x-icon').click(() => {
-      closeModal(plots);
-    });
-    $('#x-modal-overlay').click(function () {
-      closeModal(plots);
-    });
+  $('.x-modal').click(function (e) {
+    e.stopPropagation();
+  });
+  $('.x-icon').click(() => {
+    closeModal(plots);
+  });
+  $('#x-modal-overlay').click(function () {
+    closeModal(plots);
+  });
+  $('#x-revert').click(() => {
+    $('#x-sel-revert').trigger('click');
+    updateStatistics();
+    plots = drawStatisticPlot();
   });
 }
 
