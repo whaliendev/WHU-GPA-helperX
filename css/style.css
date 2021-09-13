@@ -142,6 +142,14 @@
 .x-modal {
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.26);
+  opacity: 0.1;
+  transform: translateY(-90px);
+  transition: all 0.3s cubic-bezier(0.2, -0.25, 0.7, 1.25);
+}
+
+.x-overlay.x-open .x-modal{
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .x-modal header {

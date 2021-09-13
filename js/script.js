@@ -224,13 +224,15 @@ function bindEvents() {
     updateAllScores();
   });
 
-  // 全选/全不选，我也不知道这个意义是啥，但是李叶加了
+  // 全选/全不选，我也不知道这个意义是啥，但是李叶大大加了
   $('#x-sel-all').click(() => {
     if ($('input[name="x-course-select"]:checked').length === 0) {
       $('input[name="x-course-select"]').prop('checked', true);
+      $('input[name="x-selbox"]').prop('checked', true);
       $('#x-sel-all').text('全不选');
     } else {
       $('input[name="x-course-select"]').prop('checked', false);
+      $('input[name="x-selbox"]').prop('checked', false);
       $('#x-sel-all').text('全选');
     }
     updateAllScores();
@@ -253,6 +255,7 @@ function bindEvents() {
       } else {
         $(this).find('td:eq(3) input:checkbox').prop('checked', false);
       }
+      $('input[name="x-selbox"]').prop('checked', true);
     });
     updateAllScores();
   });
@@ -595,7 +598,7 @@ function drawScoreTrendingPlot() {
         'cumGPA',
         'cumScore'
       ],
-      sourceHeader: false, 
+      sourceHeader: false,
       source: recordDataset
     },
     xAxis: [
