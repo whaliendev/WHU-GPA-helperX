@@ -5,10 +5,13 @@
  */
 const style = document.createElement('link');
 style.href = chrome.runtime.getURL('css/style.css');
-style.rel = "stylesheet";
+style.rel = 'stylesheet';
 document.head.appendChild(style);
+
+let echarts = document.createElement('script');
+echarts.src = chrome.runtime.getURL('js/echarts.min.js');
+document.head.appendChild(echarts);
 
 let script = document.createElement('script');
 script.src = chrome.runtime.getURL('js/script.js');
-
 document.body.appendChild(script);

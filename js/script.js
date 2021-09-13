@@ -88,6 +88,7 @@ function customStaticUI(catsList) {
         <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-rev">反选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-revert">复原</button>
+        <button class="x-button btn btn-primary btn-sm" id="x-show-graph">图表</button>
     `);
 
   const unique = [...new Set(catsList)].sort((a, b) => a.localeCompare(b));
@@ -138,6 +139,28 @@ function customStaticUI(catsList) {
     }
   );
   observer.observe(headerInfo);
+
+  // Add graph modal
+  $('header.navbar-inverse.top2').before(`
+    <div class="x-overlay" id="x-modal-overlay">
+      <div class="x-modal">
+          <header>
+              <span>统计信息</span>
+              <span id="x-revert">
+                  复原
+              </span>
+              <button class="x-icon" title="关闭">
+                  <div class="x-line x-line1"></div>
+                  <div class="x-line x-line2"></div>
+              </button>
+          </header>
+          <main>
+              <div id="x-graph1"></div>
+              <div id="x-graph2"></div>
+          </main>
+      </div>
+    </div>
+  `);
 }
 
 /**
@@ -163,9 +186,9 @@ function sortScores() {
               <tr class="x-sem-row">
                   <td colspan="22" class="x-sem-info">
                   <strong class="x-info-block">
-                  ${year}学年&nbsp;&nbsp;第 ${sem} 学期&nbsp;&nbsp;&nbsp;&nbsp;
+                  <em>${year}</em>&nbsp;学年&nbsp;&nbsp;第&nbsp;<em>${sem}</em>&nbsp;学期&nbsp;&nbsp;&nbsp;&nbsp;
                   学分数：<span>${semGPA[0]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                  平均GPA：<span color>${semGPA[1]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                  平均GPA：<span>${semGPA[1]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
                   平均成绩：<span>${semGPA[2]}</span>
                   </strong>
                   </td>
@@ -233,6 +256,97 @@ function bindEvents() {
     });
     updateAllScores();
   });
+
+  // 图表
+  $('#x-show-graph').click(() => {
+    $('#x-modal-overlay').addClass('x-open');
+    updateStatistics();
+    let plots = drawStatisticPlot();
+
+    $('.x-modal').click(function (e) {
+      e.stopPropagation();
+    });
+    $('.x-icon').click(() => {
+      closeModal(plots);
+    });
+    $('#x-modal-overlay').click(function () {
+      closeModal(plots);
+    });
+  });
+}
+
+function closeModal(plots) {
+  plots.forEach((plot) => plot.dispose());
+  $('#x-modal-overlay').removeClass('x-open');
+}
+
+function drawStatisticPlot() {
+  let creditPlot = drawCreditsPlot();
+  let trendingPlot = drawScoreTrendingPlot();
+  return [creditPlot, trendingPlot];
+}
+
+function updateStatistics() {
+  const creditsMap = new Map();
+  const trendingArray = [];
+  $('table:eq(1)')
+    .find('tr:gt(0)')
+    .each(function () {
+      const record = $(this).find('td:eq(5), td:eq(6)');
+
+      if (record.length === 0) {
+        // x-sem-row
+        const emArr = $(this).find('em').toArray();
+        const scoreArr = $(this).find('span').toArray();
+        trendingArray.push([
+          emArr[0].textContent + '-' + emArr[1].textContent,
+          parseFloat(scoreArr[0].textContent),
+          parseFloat(scoreArr[1].textContent),
+          parseFloat(scoreArr[2].textContent)
+        ]);
+      } else {
+        if ($(this).find('input[name="x-course-select"]').is(':checked')) {
+          // record row
+          const cat = record[0].textContent;
+          const credits = parseFloat(record[1].textContent);
+          if (creditsMap.has(cat)) {
+            creditsMap.set(cat, creditsMap.get(cat) + credits);
+          } else {
+            creditsMap.set(cat, credits);
+          }
+        }
+      }
+    });
+  processData(creditsMap, trendingArray);
+}
+
+function processData(creditsMap, trendingArray) {
+  let cumGPA = 0,
+    cumScore = 0,
+    cumCredits = 0;
+  // console.log(trendingArray);
+  for (let i = 0; i < trendingArray.length; i++) {
+    const credits = trendingArray[i][1];
+    const GPA = trendingArray[i][2];
+    const score = trendingArray[i][3];
+    cumCredits += credits;
+    cumGPA += credits * GPA;
+    cumScore += credits * score;
+    trendingArray[i].push(cumGPA / cumCredits);
+    trendingArray[i].push(cumScore / cumCredits);
+  }
+
+  creditsDataset = Array.from(creditsMap)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map((cat) => [cat[0], cat[1].toFixed(1)]);
+  recordDataset = trendingArray.map((sem) => [
+    sem[0],
+    sem[1].toFixed(1),
+    sem[2].toFixed(3),
+    sem[3].toFixed(2),
+    sem[4].toFixed(3),
+    sem[5].toFixed(2)
+  ]);
 }
 
 /**
@@ -386,4 +500,223 @@ function updateSemScores() {
 function updateAllScores() {
   updateHeaderScores();
   updateSemScores();
+}
+
+/********************************  图表  ************************************* */
+let creditsDataset = [];
+
+let recordDataset = [];
+
+function drawCreditsPlot() {
+  console.log(creditsDataset);
+  var creditChart = echarts.init(document.getElementById('x-graph1'));
+
+  let option = {
+    animationDuration: 1000,
+    title: {
+      text: 'Credits by Category'
+    },
+    tooltip: {
+      show: true
+    },
+    toolbox: {
+      show: true,
+      feature: {
+        saveAsImage: {
+          title: 'Save'
+        }
+      },
+      right: '8px'
+    },
+    dataset: [
+      {
+        dimensions: ['category', 'credits'],
+        sourceHeader: false,
+        source: creditsDataset /* .sort((a, b)=> a[0].length - b[0].length) */
+      }
+    ],
+    xAxis: {
+      type: 'category',
+      axisLabel: {
+        show: true,
+        rotate: 30
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'credits'
+    },
+    series: [
+      {
+        name: 'Credits',
+        type: 'bar',
+        label: {
+          show: true,
+          position: 'top'
+        }
+      }
+    ]
+  };
+
+  creditChart.setOption(option);
+  return creditChart;
+}
+
+function drawScoreTrendingPlot() {
+  console.log(recordDataset);
+  var scoreChart = echarts.init(document.getElementById('x-graph2'));
+  option = {
+    animationDuration: 1000,
+    title: { text: 'Scores Trending Plot' },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' }
+    },
+    toolbox: {
+      show: true,
+      feature: {
+        saveAsImage: {
+          title: 'Save'
+        }
+      },
+      right: '8px'
+    },
+    legend: {
+      // orient: 'vertical',
+      bottom: '80px',
+      left: 'center'
+    },
+    dataset: {
+      dimensions: [
+        'sem',
+        'semCredits',
+        'semGPA',
+        'semScore',
+        'cumGPA',
+        'cumScore'
+      ],
+      sourceHeader: false, 
+      source: recordDataset
+    },
+    xAxis: [
+      {
+        type: 'category',
+        axisLabel: {
+          show: true,
+          rotate: 30
+        },
+        axisTick: {
+          alignWithLabel: true
+        }
+      }
+    ],
+    yAxis: [
+      {
+        type: 'value',
+        name: 'GPA',
+        min: 0,
+        max: 4.0,
+        position: 'left'
+      },
+      {
+        type: 'value',
+        name: 'Score',
+        min: 55,
+        max: 100,
+        position: 'right'
+      }
+    ],
+    series: [
+      {
+        name: '学期GPA',
+        type: 'line',
+        yAxisIndex: 0,
+        encode: {
+          x: 'sem',
+          y: 'semGPA'
+        }
+      },
+      {
+        name: '累积GPA',
+        type: 'line',
+        yAxisIndex: 0,
+        encode: {
+          x: 'sem',
+          y: 'cumGPA'
+        }
+      },
+      {
+        name: '学期平均分',
+        type: 'line',
+        yAxisIndex: 1,
+        encode: {
+          x: 'sem',
+          y: 'semScore'
+        }
+      },
+      {
+        name: '累积平均分',
+        type: 'line',
+        yAxisIndex: 1,
+        encode: {
+          x: 'sem',
+          y: 'cumScore'
+        }
+      }
+    ]
+  };
+  scoreChart.setOption(option);
+  scoreChart.on('legendselectchanged', function (params) {
+    let cnt = 0,
+      onlyKey = '';
+    for (const [key, value] of Object.entries(params.selected)) {
+      if (value) {
+        cnt++;
+        onlyKey = key;
+      }
+    }
+    // there may be a more elegant way
+    if (cnt !== 1) {
+      scoreChart.setOption({
+        series: [
+          {
+            name: '学期GPA',
+            label: {
+              show: false
+            }
+          },
+          {
+            name: '累积GPA',
+            label: {
+              show: false
+            }
+          },
+          {
+            name: '学期平均分',
+            label: {
+              show: false
+            }
+          },
+          {
+            name: '累积平均分',
+            label: {
+              show: false
+            }
+          }
+        ]
+      });
+      return;
+    }
+    scoreChart.setOption({
+      series: [
+        {
+          name: onlyKey,
+          label: {
+            show: true
+          }
+        }
+      ]
+    });
+  });
+  return scoreChart;
 }

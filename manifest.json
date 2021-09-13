@@ -34,8 +34,9 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "css/style.css",
         "js/script.js",
-        "css/style.css"
+        "js/echarts.min.js"
       ],
       "matches": [
         "https://jwgl.whu.edu.cn/*"

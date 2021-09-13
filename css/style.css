@@ -1,123 +1,264 @@
-.x-button.btn.btn-primary.btn-sm{
-    margin: 0 10px;
-    transition: transform 0.3s ease-out;
+.x-button.btn.btn-primary.btn-sm {
+  margin: 0 10px;
+  transition: transform 0.3s ease-out;
 }
 
-.x-button.btn.btn-primary.btn-sm:focus{
-    outline: 0;
-    background-color: #337ab7;
+.x-button.btn.btn-primary.btn-sm:focus {
+  outline: 0;
+  background-color: #337ab7;
 }
 
-.x-button.btn.btn-primary.btn-sm:active{
-    background-color: #337ab7;
-    box-shadow: none;
-    transform: scale(0.84);
+.x-button.btn.btn-primary.btn-sm:active {
+  background-color: #337ab7;
+  box-shadow: none;
+  transform: scale(0.84);
 }
 
-.btn.btn-primary.btn-sm{
-    margin: 4px;
+.btn.btn-primary.btn-sm {
+  margin: 4px;
 }
 
-.x-controls-container{
-    background-color: #f4f4f4;
-    padding: 16px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 27px;
-    z-index: 100;
-    border: 1px solid #dddddd;
+.x-controls-container {
+  background-color: #f4f4f4;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 27px;
+  z-index: 100;
+  border: 1px solid #dddddd;
 }
 
-.x-controls-container.is-pinned{
-    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.26);
+.x-controls-container.is-pinned {
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.26);
 }
 
-.x-controls-container .x-show-info{
-    display: inline-block;
+.x-controls-container .x-show-info {
+  display: inline-block;
 }
 
-.x-select{
-    margin-bottom: 8px;
+.x-select {
+  margin-bottom: 8px;
 }
 
-.x-select .x-hint{
-    font-size: 14px;
-    margin-bottom: 0;
+.x-select .x-hint {
+  font-size: 14px;
+  margin-bottom: 0;
 }
 
-.x-container{
-    overflow: hidden;
+.x-container {
+  overflow: hidden;
 }
 
-.x-check-container{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    margin: 0 -20px;
+.x-check-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 0 -20px;
 }
 
-.x-check-wrapper{
-    display: inline-block;
-    margin: 4px 20px;
+.x-check-wrapper {
+  display: inline-block;
+  margin: 4px 20px;
 }
 
-.x-check-wrapper label{
-    margin-bottom: 0;
+.x-check-wrapper label {
+  margin-bottom: 0;
 }
 
-.x-check-wrapper input{
-    margin-top: 0;
-    margin-bottom: 2px;
+.x-check-wrapper input {
+  margin-top: 0;
+  margin-bottom: 2px;
 }
 
-.x-show-info{
-    transform: translateY(5px);
+.x-show-info {
+  transform: translateY(5px);
 }
 
-.x-info-wrapper{
-    display: inline-block;
-    margin: 4px 10px;
+.x-info-wrapper {
+  display: inline-block;
+  margin: 4px 10px;
 }
 
-.x-show-info .x-info-wrapper:last-of-type{
-    margin-right: 0;
+.x-show-info .x-info-wrapper:last-of-type {
+  margin-right: 0;
 }
 
-.x-info-wrapper span{
-    color: #0076c1;
+.x-info-wrapper span {
+  color: #0076c1;
 }
 
-.x-info-wrapper span{
-    font-weight: bold;
+.x-info-wrapper span {
+  font-weight: bold;
 }
 
-.x-sem-row{
-    border: 0;
+.x-sem-row {
+  border: 0;
 }
 
-.x-sem-info{
-    border-bottom: 1px solid #e1e1e1;
-    padding: 4px 15px;
-    border-color: #dddfd7 !important;
+.x-sem-info {
+  border-bottom: 1px solid #e1e1e1;
+  padding: 4px 15px;
+  border-color: #dddfd7 !important;
 }
 
-.x-info-block{
-    display: inline-block;
-    position: relative;
-    left: calc(50vw - 80px);
-    transform: translateX(-50%);
+.x-info-block {
+  display: inline-block;
+  position: relative;
+  left: calc(50vw - 80px);
+  transform: translateX(-50%);
 }
 
-.x-info-block span{
-    color: #0076c1;
-    font-weight: bold;
+.x-info-block span {
+  color: #0076c1;
+  font-weight: bold;
 }
 
-.x-alt{
-    background-color: #f4f4f4;
+.x-alt {
+  background-color: #f4f4f4;
 }
 
+/*********************************  图表   *************************************/
+.x-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.72);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000000;
+  visibility: hidden;
+}
 
+.x-overlay.x-open {
+  visibility: visible;
+}
+
+.x-modal {
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.26);
+}
+
+.x-modal header {
+  height: 40px;
+  width: 100%;
+  position: relative;
+  background-color: #0076c1;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.x-modal header span {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  transform: translateY(-50%);
+  color: #fff;
+}
+
+.x-modal main {
+  max-width: 1250px;
+  min-width: 630px;
+  background-color: #f8f8f8;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 5px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+#x-graph1,
+#x-graph2 {
+  width: 600px;
+  height: 400px;
+  /* background-color: #f8f8f8; */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  margin: 10px;
+}
+
+@media (max-width: 1250px) {
+  .x-modal main {
+    width: 630px;
+    height: auto;
+  }
+}
+
+#x-revert {
+  cursor: pointer;
+  color: white;
+  position: absolute;
+  left: 120px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  opacity: 1;
+  transition: opacity 0.1s ease-out;
+  user-select: none;
+  /* background-color: rgba(0, 0, 0, 0.88); */
+}
+
+#x-revert:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+#x-revert:active {
+  opacity: 0;
+}
+
+/*** exit icon ***/
+.x-icon {
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  height: 30px;
+  width: 30px;
+  transition: all 1.3s ease-out;
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 6px;
+}
+
+/* .icon:hover{
+      background-color: rgba(0, 0, 0, 0.15);
+  } */
+
+.x-icon:active .x-line1,
+.x-icon:active .x-line2 {
+  background-color: #0076c1;
+}
+
+.x-icon:focus {
+  outline: 0;
+}
+
+.x-icon .x-line {
+  background-color: #fff;
+  height: 2px;
+  width: 20px;
+  position: absolute;
+  top: 10px;
+  left: 5px;
+}
+
+.x-icon .x-line2 {
+  top: auto;
+  bottom: 10px;
+  transform: translateX(-4px) rotate(45deg) translateY(-5.5px);
+}
+
+.x-icon .x-line1 {
+  transform: translateX(-4px) rotate(-45deg) translateY(5.5px);
+}
+/*****************************  end of exit icon  ****************************/
+
+/************************  end of  图表   ************************************/
