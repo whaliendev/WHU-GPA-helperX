@@ -19,7 +19,7 @@ $.ajaxSetup({
 /**
  * 触发查询按钮click事件，获取全部成绩
  */
-(function fetchScores() {
+$(function fetchScores() {
   $('#searchForm .chosen-select').first().val('');
   $('#searchForm .chosen-select').last().val('');
   $('.chosen-single span').text('全部');
@@ -32,7 +32,7 @@ $.ajaxSetup({
   $('select.ui-pg-selbox').val(150);
 
   $('#search_go').trigger('click');
-})();
+});
 
 $(document).ajaxComplete(customDynamicUI);
 
