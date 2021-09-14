@@ -1,5 +1,8 @@
-let faculty = '';
+let faculty = ''; // 全局变量，储存学院名
 
+/**
+ * 获取学院名
+ */
 $.ajaxSetup({
   dataFilter: function (data, type) {
     const response = JSON.parse(data);
@@ -204,7 +207,8 @@ function sortScores() {
   bindEvents();
 }
 
-let plots = null;
+let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+
 /**
  * 绑定各控件事件
  */
@@ -267,16 +271,19 @@ function bindEvents() {
     updateStatistics();
     plots = drawStatisticPlot();
   });
-
+  // 点击modal不关闭overlay
   $('.x-modal').click(function (e) {
     e.stopPropagation();
   });
+  // 点击exit icon关闭overlay
   $('.x-icon').click(() => {
-    closeModal(plots);
+    closeModal();
   });
+  // 直接点击overlay
   $('#x-modal-overlay').click(function () {
-    closeModal(plots);
+    closeModal();
   });
+  // 点击modal上的复原按钮将课程选项更新，并重新绘图
   $('#x-revert').click(() => {
     $('#x-sel-revert').trigger('click');
     updateStatistics();
@@ -284,17 +291,27 @@ function bindEvents() {
   });
 }
 
-function closeModal(plots) {
+/**
+ * 关闭modal，注意这里用到了plots全局变量来进行资源释放
+ */
+function closeModal() {
   plots.forEach((plot) => plot.dispose());
   $('#x-modal-overlay').removeClass('x-open');
 }
 
+/**
+ * 画统计图
+ * @returns {Array}  数组，存储已经绘制图像的echartInstance实例，方便进行资源释放
+ */
 function drawStatisticPlot() {
   let creditPlot = drawCreditsPlot();
   let trendingPlot = drawScoreTrendingPlot();
   return [creditPlot, trendingPlot];
 }
 
+/**
+ * 更新统计图需要的数据
+ */
 function updateStatistics() {
   const creditsMap = new Map();
   const trendingArray = [];
@@ -329,6 +346,11 @@ function updateStatistics() {
   processData(creditsMap, trendingArray);
 }
 
+/**
+ * 将creditsMap和trendingArray处理成合适的格式
+ * @param {Map} creditsMap 学分按课程类别的map
+ * @param {Array} trendingArray 每学期各种成绩信息的趋势数组
+ */
 function processData(creditsMap, trendingArray) {
   let cumGPA = 0,
     cumScore = 0,
@@ -506,16 +528,27 @@ function updateSemScores() {
   }
 }
 
+/**
+ * 更新界面上的所有成绩信息
+ */
 function updateAllScores() {
   updateHeaderScores();
   updateSemScores();
 }
 
 /********************************  图表  ************************************* */
-let creditsDataset = [];
+// 学分按课程类别的数组
+// Array[category, credits count]
+let creditsDataset = []; 
 
-let recordDataset = [];
+// 每学期的成绩记录数组
+// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
+let recordDataset = []; 
 
+/**
+ * 绘制学分按课程类别分类的bar图，方便选课的时候用
+ * @returns {echartInstance} 当前图像的示例对象
+ */
 function drawCreditsPlot() {
   console.log(creditsDataset);
   var creditChart = echarts.init(document.getElementById('x-graph1'));
@@ -571,6 +604,10 @@ function drawCreditsPlot() {
   return creditChart;
 }
 
+/**
+ * 绘制成绩随semester的趋势line图，娱乐用
+ * @returns {echartInstance} 当前图像的实例
+ */
 function drawScoreTrendingPlot() {
   console.log(recordDataset);
   var scoreChart = echarts.init(document.getElementById('x-graph2'));
