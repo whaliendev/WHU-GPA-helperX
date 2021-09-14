@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  background-image: linear-gradient(165deg, #ff758c 0%, #ff7eb3 100%);
+  background-image: linear-gradient(315deg, #48c6ef 0%, #6f86d6 75%);
 }
 
 header {
@@ -11,7 +11,7 @@ header {
   display: flex;
   align-items: center;
   padding: 4px;
-  color: white;
+  color: #503c14;
   /* background-color: #009efd; */
 }
 
@@ -25,6 +25,7 @@ header {
 .about {
   width: 128px;
   margin-left: 16px;
+  transform: translateY(-2px);
 }
 
 .about h4 {
@@ -57,11 +58,16 @@ a:visited {
   color: white;
 }
 
-a:hover {
-  color: #9dc5c7;
+main a:hover {
+  background-color: rgba(157, 197, 199, 0.75);
+  color: white;
 }
 
-main a:hover {
-  background-color: rgba(157, 197, 199, 0.6);
-  color: white;
+header a:link,
+header a:visited{
+  color: #503c14;
+}
+
+header a:hover{
+  color: #9dc5c7;
 }
