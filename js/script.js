@@ -372,11 +372,11 @@ function processData(creditsMap, trendingArray) {
     .map((cat) => [cat[0], cat[1].toFixed(1)]);
   recordDataset = trendingArray.map((sem) => [
     sem[0],
-    sem[1].toFixed(1),
-    sem[2].toFixed(3),
-    sem[3].toFixed(2),
-    sem[4].toFixed(3),
-    sem[5].toFixed(2)
+    sem[1].toFixed(1), // 学期学分数
+    sem[2].toFixed(3), // 学期GPA
+    sem[3].toFixed(2), // 学期平均分
+    sem[4].toFixed(3), // 累积GPA
+    sem[5].toFixed(2) // 累积平均分
   ]);
 }
 
@@ -444,7 +444,7 @@ function calcGPA(scores) {
     scoreMean = totalScore / totalCredits;
   }
 
-  return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(2)];
+  return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(3)];
 }
 
 /**
