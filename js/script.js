@@ -88,7 +88,7 @@ function customDynamicUI() {
 function customStaticUI(catsList) {
   $('#topButton')[0].onclick = null;
   $('#search_go').before(`
-        <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全选</button>
+        <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全不选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-rev">反选</button>
         <button class="x-button btn btn-primary btn-sm" id="x-sel-revert">复原</button>
         <button class="x-button btn btn-primary btn-sm" id="x-show-graph">图表</button>
@@ -372,11 +372,11 @@ function processData(creditsMap, trendingArray) {
     .map((cat) => [cat[0], cat[1].toFixed(1)]);
   recordDataset = trendingArray.map((sem) => [
     sem[0],
-    sem[1].toFixed(1),
-    sem[2].toFixed(3),
-    sem[3].toFixed(2),
-    sem[4].toFixed(3),
-    sem[5].toFixed(2)
+    sem[1].toFixed(1), // 学期学分数
+    sem[2].toFixed(3), // 学期GPA
+    sem[3].toFixed(2), // 学期平均分
+    sem[4].toFixed(3), // 累积GPA
+    sem[5].toFixed(2) // 累积平均分
   ]);
 }
 
@@ -444,7 +444,7 @@ function calcGPA(scores) {
     scoreMean = totalScore / totalCredits;
   }
 
-  return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(2)];
+  return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(3)];
 }
 
 /**
@@ -539,11 +539,11 @@ function updateAllScores() {
 /********************************  图表  ************************************* */
 // 学分按课程类别的数组
 // Array[category, credits count]
-let creditsDataset = []; 
+let creditsDataset = [];
 
 // 每学期的成绩记录数组
 // Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
-let recordDataset = []; 
+let recordDataset = [];
 
 /**
  * 绘制学分按课程类别分类的bar图，方便选课的时候用
