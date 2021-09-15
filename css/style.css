@@ -27,7 +27,7 @@
   justify-content: space-between;
   position: sticky;
   top: 27px;
-  z-index: 100;
+  z-index: 10000;
   border: 1px solid #dddddd;
 }
 
@@ -147,7 +147,7 @@
   transition: all 0.3s cubic-bezier(0.2, -0.25, 0.7, 1.25);
 }
 
-.x-overlay.x-open .x-modal{
+.x-overlay.x-open .x-modal {
   transform: translateY(0);
   opacity: 1;
 }
