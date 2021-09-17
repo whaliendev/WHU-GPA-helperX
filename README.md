@@ -15,20 +15,7 @@ You can use this extension either through chrome developer mode or chrome web st
 
 First, you need to have the code locally(`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Then extract the source code to a proper directory if needed.
 Next, go to your chrome [extension management page](chrome://extensions), open the developer mode and click load unpacked as shown below.
-
-<svg fill="none" viewBox="0 0 800 400" width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-	<foreignObject width="100%" height="100%">
-		<div xmlns="http://www.w3.org/1999/xhtml">
-			<style>
-                img{
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-                    border-radius: 8px;
-                }
-			</style>
-			<img src="docs/chrome-extension.jpg">
-		</div>
-	</foreignObject>
-</svg>
+<img src="docs/chrome-extension.svg" width="1440" height="1024" alt="screenshoot">
 
 ### chrome web store
 
