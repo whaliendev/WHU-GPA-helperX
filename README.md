@@ -13,7 +13,7 @@ You can use this extension either through chrome developer mode or chrome web st
 
 ### chrome developer mode
 
-First, you need to have the code locally(`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Then extract the source code to a proper directory if needed.
+First, you need to have the code locally (`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Then extract the source code to a proper directory if needed.
 Next, go to your chrome extension manage page, open the developer mode and click load unpacked as shown below.
 <img src="docs/manage.gif">
 
@@ -26,7 +26,7 @@ After installation, this extension will be automatically triggered when you are 
 
 ## Broswer Compatibility
 
-<table align="center">
+<table>
 <thead>
 <tr>
 <th><img alt="IE" title="null" src="https://cdn.jsdelivr.net/npm/@browser-logos/edge/edge_32x32.png"></th><th><img alt="Chrome" title="null" src="https://cdn.jsdelivr.net/npm/@browser-logos/chrome/chrome_32x32.png"></th>
@@ -46,8 +46,7 @@ Many thanks to [HackerLiye](https://github.com/HackerLiye)'s inspiration and ope
 
 [GPLv3](LICENSE)
 
-<p align="center">Copyright © 2021 Hwa</p>
 
+<center>Copyright © 2021 Hwa</center>
 ---
-
 <p align="center"><b>If you like my project, feel free to give my repo a star~ :star: :arrow_up:. </b></p>
