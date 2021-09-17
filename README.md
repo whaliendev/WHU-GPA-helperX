@@ -15,6 +15,7 @@ You can use this extension either through chrome developer mode or chrome web st
 
 First, you need to have the code locally (`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Then extract the source code to a proper directory if needed.
 Next, go to your chrome extension manage page, open the developer mode and click load unpacked as shown below.
+
 <img src="docs/manage.gif">
 
 ### chrome web store
