@@ -12,11 +12,12 @@
 You can use this extension either through chrome developer mode(add to your chrome manually) or chrome web store.
 
 ### TL; DR
+
 Download this extension at chrome web store, then enjoy it.
 
 ### chrome developer mode
 
-You may know that in this way you need to have the source code locally first (`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Next, feel free to extract the zip file to a proper directory if needed. 
+You may know that in this way you need to have the source code locally first (`git clone` or download from [release page](https://github.com/whaliendev/WHU-GPA-helperX/releases)). Next, feel free to extract the zip file to a proper directory if needed.
 After that, go to your chrome extension manage page, open the developer mode and click load unpacked as shown below.
 
 <img src="docs/manage.gif">
@@ -49,7 +50,6 @@ Many thanks to [HackerLiye](https://github.com/HackerLiye) and his open source p
 ## License
 
 [GPLv3](LICENSE)
-
 
 <center>Copyright © 2021 Hwa</center>
 
