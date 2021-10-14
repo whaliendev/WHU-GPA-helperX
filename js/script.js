@@ -17,7 +17,7 @@ $.ajaxSetup({
 });
 
 /**
- * 触发查询按钮click事件，获取全部成绩
+ * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
 $(function fetchScores() {
   $('#searchForm .chosen-select').first().val('');
@@ -34,12 +34,18 @@ $(function fetchScores() {
   $('#search_go').trigger('click');
 });
 
+/**
+ * Ajax请求完成后，触发配置动态UI
+ */
 $(document).ajaxComplete(customDynamicUI);
 
 /**
  * 配置成绩表格选项框
  */
 function customDynamicUI() {
+  // 过滤不是获取成绩的请求
+  if ($('table:eq(1) tr:gt(0)').length <= 2) return;
+
   $('#jqgh_tabGrid_kch')
     .contents()
     .filter(function () {
@@ -47,8 +53,7 @@ function customDynamicUI() {
     })
     .replaceWith('选择');
 
-  const catsList = [];
-
+  const catsList = []; // 获取课程类别的数组，未去重
   $('table:eq(1) tr:gt(0)').each(function () {
     const score = parseFloat($(this).find('td:eq(7)').text());
     if (score >= 60.0) {
@@ -60,7 +65,7 @@ function customDynamicUI() {
 
       const courseCat = $.trim($(this).find('td:eq(5)').text());
       const courseIns = $.trim($(this).find('td:eq(12)').text());
-      //   console.log(courseCat, courseIns);
+      // console.log(faculty, courseCat, courseIns);
       if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
         $(this)
           .find('td:eq(5)')
@@ -73,11 +78,7 @@ function customDynamicUI() {
         .html(`<input type="checkbox" name="x-course-select" />`);
     }
   });
-  if ($('#x-sel-all').length === 0) {
-    customStaticUI(catsList);
-  } else {
-    $('input[name="x-selbox"]').prop('checked', true);
-  }
+  customStaticUI(catsList);
   sortScores();
 }
 
@@ -86,84 +87,19 @@ function customDynamicUI() {
  * @param {Array} catsList 未去重课程类别列表。因为配置动态UI可能会执行多次，所以不在配置动态UI进行去重
  */
 function customStaticUI(catsList) {
-  $('#topButton')[0].onclick = null;
-  $('#search_go').before(`
-        <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全不选</button>
-        <button class="x-button btn btn-primary btn-sm" id="x-sel-rev">反选</button>
-        <button class="x-button btn btn-primary btn-sm" id="x-sel-revert">复原</button>
-        <button class="x-button btn btn-primary btn-sm" id="x-show-graph">图表</button>
-    `);
-
-  const unique = [...new Set(catsList)].sort((a, b) => a.localeCompare(b));
-  //   console.log(unique);
-  let catContent = '';
-  for (let i = 0; i < unique.length; i++) {
-    catContent += `
-            <div class="x-check-wrapper">
-                <label for="cat${i}">${unique[i]}</label>
-                <input type="checkbox" name="x-selbox" value="${unique[i]}" id="x-cat${i}" checked>
-            </div>
-        `;
+  // $('#topButton')[0].onclick = null;
+  // 如果没有添加Button控件和图表Modal
+  if ($('#x-sel-all').length === 0) {
+    addButtons();
+    addGraphModal();
   }
-  //   console.log(catContent);
-  $('#btn_sortSetting').before(`
-        <div class="x-controls-container">
-            <div class="x-select">
-                <label for="" class="x-hint">请选择计算项：</label>
-                <div class="x-container">
-                    <div class="x-check-container">
-                        ${catContent}
-                    </div>
-                </div>
-            </div>
-            <div class="x-show-info">
-                <div class="x-info-wrapper">
-                    <strong>总学分数：</strong><span class="x-info" id="x-credits">0.0</span>
-                </div>
-                <div class="x-info-wrapper">
-                    <strong>平均GPA：</strong><span class="x-info" id="x-gpa">0.000</span>
-                </div>
-                <div class="x-info-wrapper">
-                    <strong>平均成绩：</strong><span class="x-info" id="x-average-score">0.00</span>
-                </div>
-            </div>
-        </div>
-  `);
 
-  // add shadow to controls container, when controls container is positioned stuck.
-  // https://css-tricks.com/how-to-detect-when-a-sticky-element-gets-pinned/
-  // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
-  const headerInfo = $('.x-controls-container')[0];
-  const observer = new IntersectionObserver(
-    ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1),
-    {
-      rootMargin: '-28px 0px 0px',
-      threshold: [1]
-    }
-  );
-  observer.observe(headerInfo);
-
-  // Add graph modal
-  $('header.navbar-inverse.top2').before(`
-    <div class="x-overlay" id="x-modal-overlay">
-      <div class="x-modal">
-          <header>
-              <span>统计信息</span>
-              <span id="x-revert">
-                  复原
-              </span>
-              <button class="x-icon" title="关闭">
-                  <div class="x-line x-line1"></div>
-                  <div class="x-line x-line2"></div>
-              </button>
-          </header>
-          <main>
-              <div id="x-graph1"></div>
-              <div id="x-graph2"></div>
-          </main>
-      </div>
-    </div>
-  `);
+  // 如果没有添加课程选项框
+  if ($('input[name="x-selbox"]').length === 0) {
+    addCourseSelectBox(catsList);
+  } else {
+    $('input[name="x-selbox"]').prop('checked', true);
+  }
 }
 
 /**
@@ -205,6 +141,106 @@ function sortScores() {
     });
   updateAllScores();
   bindEvents();
+}
+
+/**
+ * 添加控制Button
+ */
+function addButtons() {
+  $('#search_go').before(`
+          <button class="x-button btn btn-primary btn-sm" id="x-sel-all">全不选</button>
+          <button class="x-button btn btn-primary btn-sm" id="x-sel-rev">反选</button>
+          <button class="x-button btn btn-primary btn-sm" id="x-sel-revert">复原</button>
+          <button class="x-button btn btn-primary btn-sm" id="x-show-graph">图表</button>
+      `);
+}
+
+/**
+ * 添加图表Modal
+ */
+function addGraphModal() {
+  // Add graph modal
+  $('header.navbar-inverse.top2').before(`
+    <div class="x-overlay" id="x-modal-overlay">
+      <div class="x-modal">
+          <header>
+              <span>统计信息</span>
+              <span id="x-revert">
+                  复原
+              </span>
+              <button class="x-icon" title="关闭">
+                  <div class="x-line x-line1"></div>
+                  <div class="x-line x-line2"></div>
+              </button>
+          </header>
+          <main>
+              <div id="x-graph1"></div>
+              <div id="x-graph2"></div>
+          </main>
+      </div>
+    </div>
+  `);
+}
+
+/**
+ * 配置课程计算选项组
+ * @param {Array} catsList 课程类别列表，注意未去重
+ * @returns 无返回值
+ */
+function addCourseSelectBox(catsList) {
+  if (catsList.length === 0) return;
+  const unique = [...new Set(catsList)].sort((a, b) => a.localeCompare(b));
+  let catContent = '';
+  for (let i = 0; i < unique.length; i++) {
+    catContent += `
+              <div class="x-check-wrapper">
+                  <label for="cat${i}">${unique[i]}</label>
+                  <input type="checkbox" name="x-selbox" value="${unique[i]}" id="x-cat${i}" checked>
+              </div>
+          `;
+  }
+  $('#btn_sortSetting').before(`
+          <div class="x-controls-container">
+              <div class="x-select">
+                  <label for="" class="x-hint">请选择计算项：</label>
+                  <div class="x-container">
+                      <div class="x-check-container">
+                          ${catContent}
+                      </div>
+                  </div>
+              </div>
+              <div class="x-show-info">
+                  <div class="x-info-wrapper">
+                      <strong>总学分数：</strong><span class="x-info" id="x-credits">0.0</span>
+                  </div>
+                  <div class="x-info-wrapper">
+                      <strong>平均GPA：</strong><span class="x-info" id="x-gpa">0.000</span>
+                  </div>
+                  <div class="x-info-wrapper">
+                      <strong>平均成绩：</strong><span class="x-info" id="x-average-score">0.00</span>
+                  </div>
+              </div>
+          </div>
+    `);
+  addHeaderPanel();
+}
+
+/**
+ * 添加控制container的悬浮显示效果
+ */
+function addHeaderPanel() {
+  // add shadow to controls container, when controls container is positioned stuck.
+  // https://css-tricks.com/how-to-detect-when-a-sticky-element-gets-pinned/
+  // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
+  const headerInfo = $('.x-controls-container')[0];
+  const observer = new IntersectionObserver(
+    ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1),
+    {
+      rootMargin: '-28px 0px 0px',
+      threshold: [1]
+    }
+  );
+  observer.observe(headerInfo);
 }
 
 let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
@@ -550,7 +586,7 @@ let recordDataset = [];
  * @returns {echartInstance} 当前图像的示例对象
  */
 function drawCreditsPlot() {
-  console.log(creditsDataset);
+  // console.log(creditsDataset);
   var creditChart = echarts.init(document.getElementById('x-graph1'));
 
   let option = {
@@ -609,7 +645,7 @@ function drawCreditsPlot() {
  * @returns {echartInstance} 当前图像的实例
  */
 function drawScoreTrendingPlot() {
-  console.log(recordDataset);
+  // console.log(recordDataset);
   var scoreChart = echarts.init(document.getElementById('x-graph2'));
   option = {
     animationDuration: 1000,
