@@ -87,7 +87,7 @@ function customDynamicUI() {
  * @param {Array} catsList 未去重课程类别列表。因为配置动态UI可能会执行多次，所以不在配置动态UI进行去重
  */
 function customStaticUI(catsList) {
-  // $('#topButton')[0].onclick = null;
+  $('#topButton')[0].onclick = null;
   // 如果没有添加Button控件和图表Modal
   if ($('#x-sel-all').length === 0) {
     addButtons();
