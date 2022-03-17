@@ -1,46 +1,45 @@
 {
-  "name": "武汉大学成绩助手X",
-  "description": "新教务系统也很难用，试试这个吧！",
-  "version": "1.1.6",
-  "manifest_version": 3,
-  "host_permissions": [
-    "https://jwgl.whu.edu.cn/*"
-  ],
-  "icons": {
-    "16": "/images/purr16.png",
-    "32": "/images/purr32.png",
-    "48": "/images/purr48.png",
-    "128": "/images/purr128.png"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "/images/purr16.png",
-      "32": "/images/purr32.png",
-      "48": "/images/purr48.png",
-      "128": "/images/purr128.png"
-    }
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://jwgl.whu.edu.cn/cjcx/cjcx_cxDgXscj.html*"
-      ],
-      "js": [
-        "js/content-script.js"
-      ]
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "css/style.css",
-        "js/script.js",
-        "js/echarts.min.js"
-      ],
-      "matches": [
-        "https://jwgl.whu.edu.cn/*"
-      ]
-    }
-  ]
+    "name": "武汉大学成绩助手X",
+    "description": "新教务系统也很难用，试试这个吧！",
+    "version": "1.1.7",
+    "manifest_version": 3,
+    "icons": {
+        "16": "/images/purr16.png",
+        "32": "/images/purr32.png",
+        "48": "/images/purr48.png",
+        "128": "/images/purr128.png"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "/images/purr16.png",
+            "32": "/images/purr32.png",
+            "48": "/images/purr48.png",
+            "128": "/images/purr128.png"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://jwgl.whu.edu.cn/cjcx/cjcx_cxDgXscj.html*"
+            ],
+            "js": [
+                "js/content-script.js"
+            ],
+            "css": [
+                "css/style.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "js/script.js",
+                "js/echarts.min.js"
+            ],
+            "matches": [
+                "https://jwgl.whu.edu.cn/*"
+            ]
+        }
+    ]
 }
