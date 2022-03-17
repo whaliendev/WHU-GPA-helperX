@@ -4,7 +4,7 @@ let faculty = ''; // 全局变量，储存学院名
  * 获取学院名
  */
 $.ajaxSetup({
-    dataFilter: function(data, type) {
+    dataFilter: function (data, type) {
         const response = JSON.parse(data);
         if (
             response['items'] &&
@@ -50,13 +50,13 @@ function customDynamicUI() {
 
     $('#jqgh_tabGrid_kch')
         .contents()
-        .filter(function() {
+        .filter(function () {
             return this.nodeType === 3;
         })
         .replaceWith('选择');
 
     const catsList = []; // 获取课程类别的数组，未去重
-    $('table:eq(1) tr:gt(0)').each(function() {
+    $('table:eq(1) tr:gt(0)').each(function () {
         const score = parseFloat($(this).find('td:eq(7)').text());
         if (score >= 60.0) {
             $(this)
@@ -96,6 +96,19 @@ function customStaticUI(catsList) {
         addGraphModal();
     }
 
+    /**
+     * 说明：绝对不要交换当前这段代码和下段代码。
+     * 因为.x-controls-container的位置变化会触发intersection observer的单向添加is-pinned类。
+     * 当然这里有更好的解决办法，不过先这样fix一下。
+     */
+    if ($('#div-data .col-md-10.col-sm-10').length !== 0) {
+        let fmBlock = $('#div-data .col-md-10.col-sm-10');
+        // console.log(fmBlock[0]);
+        fmBlock.before(fmBlock.contents());
+        fmBlock.css('display', 'none');
+        $('#btn_sortSetting').css('display', 'none');
+    }
+
     // 如果没有添加课程选项框
     if ($('input[name="x-selbox"]').length === 0) {
         addCourseSelectBox(catsList);
@@ -118,7 +131,7 @@ function sortScores() {
     let time = ['', 0];
     $('table:eq(1)')
         .find('tr:gt(0)')
-        .each(function() {
+        .each(function () {
             let year = $(this).find('td:eq(1)').text();
             let sem = parseInt($(this).find('td:eq(2)').text());
             if (time[0] !== year || time[1] !== sem) {
@@ -237,9 +250,9 @@ function addHeaderPanel() {
     const headerInfo = $('.x-controls-container')[0];
     const observer = new IntersectionObserver(
         ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1), {
-            rootMargin: '-28px 0px 0px',
-            threshold: [1]
-        }
+        rootMargin: '-28px 0px 0px',
+        threshold: [1]
+    }
     );
     observer.observe(headerInfo);
 }
@@ -256,7 +269,7 @@ function bindEvents() {
     // 响应课程类别复选框
     $('input[name="x-selbox"]').change((e) => {
         const input = e.target;
-        $('table:eq(1) tr:gt(0)').each(function() {
+        $('table:eq(1) tr:gt(0)').each(function () {
             if ($(this).find('td:eq(5)').text() === input.value) {
                 $(this)
                     .find('td:eq(3) input[name="x-course-select"]')
@@ -290,7 +303,7 @@ function bindEvents() {
 
     // 复原
     $('#x-sel-revert').click(() => {
-        $('table:eq(1) tr:gt(0)').each(function() {
+        $('table:eq(1) tr:gt(0)').each(function () {
             const score = parseFloat($(this).find('td:eq(7)').text());
             if (score >= 60.0) {
                 $(this).find('td:eq(3) input:checkbox').prop('checked', true);
@@ -309,7 +322,7 @@ function bindEvents() {
         plots = drawStatisticPlot();
     });
     // 点击modal不关闭overlay
-    $('.x-modal').click(function(e) {
+    $('.x-modal').click(function (e) {
         e.stopPropagation();
     });
     // 点击exit icon关闭overlay
@@ -317,7 +330,7 @@ function bindEvents() {
         closeModal();
     });
     // 直接点击overlay
-    $('#x-modal-overlay').click(function() {
+    $('#x-modal-overlay').click(function () {
         closeModal();
     });
     // 点击modal上的复原按钮将课程选项更新，并重新绘图
@@ -354,7 +367,7 @@ function updateStatistics() {
     const trendingArray = [];
     $('table:eq(1)')
         .find('tr:gt(0)')
-        .each(function() {
+        .each(function () {
             const record = $(this).find('td:eq(5), td:eq(6)');
 
             if (record.length === 0) {
@@ -433,7 +446,7 @@ function getCellValue(row, index) {
  * @returns 返回一个comparator function
  */
 function comparator(indexes) {
-    return function(a, b) {
+    return function (a, b) {
         let ans = 0;
 
         for (let i = 0; i < indexes.length; i++) {
@@ -460,7 +473,7 @@ function calcGPA(scores) {
     let totalScore = 0,
         totalCredits = 0,
         totalGPA = 0;
-    $(scores).each(function() {
+    $(scores).each(function () {
         let credit = parseFloat($(this)[0]);
         let score = parseFloat($(this)[1]);
         let GPA = parseFloat($(this)[2]);
@@ -492,7 +505,7 @@ function calcGPA(scores) {
  */
 function calcSemGPA(year, sem) {
     let scores = [];
-    $('table:eq(1) tr:gt(0)').each(function() {
+    $('table:eq(1) tr:gt(0)').each(function () {
         if (
             $(this).find('td:eq(1)').text() === year &&
             parseInt($(this).find('td:eq(2)').text()) === sem
@@ -502,7 +515,7 @@ function calcSemGPA(year, sem) {
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                 $(this)
                     .find('td:eq(6), td:eq(7), td:eq(9)')
-                    .each(function() {
+                    .each(function () {
                         row.push($.trim($(this).text()));
                     });
                 scores.push(row);
@@ -518,12 +531,12 @@ function calcSemGPA(year, sem) {
  */
 function updateHeaderScores() {
     let scores = [];
-    $('table tr:gt(0)').each(function() {
+    $('table tr:gt(0)').each(function () {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
             $(this)
                 .find('td:eq(6), td:eq(7), td:eq(9)')
-                .each(function() {
+                .each(function () {
                     row.push($.trim($(this).text()));
                 });
             scores.push(row);
@@ -547,19 +560,19 @@ function updateSemScores() {
         $('tr.x-sem-row')
             .eq(i)
             .nextUntil('tr.x-sem-row')
-            .each(function() {
+            .each(function () {
                 let row = [];
                 if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                     $(this)
                         .find('td:eq(6), td:eq(7), td:eq(9)')
-                        .each(function() {
+                        .each(function () {
                             row.push($.trim($(this).text()));
                         });
                     scores.push(row);
                 }
             });
         let info = calcGPA(scores);
-        $(`tr.x-sem-row:eq(${i}) span`).each(function(idx, _) {
+        $(`tr.x-sem-row:eq(${i}) span`).each(function (idx, _) {
             $(this).text(info[idx]);
         });
     }
@@ -688,60 +701,60 @@ function drawScoreTrendingPlot() {
             }
         }],
         yAxis: [{
-                type: 'value',
-                name: 'GPA',
-                min: 0,
-                max: 4.0,
-                position: 'left'
-            },
-            {
-                type: 'value',
-                name: 'Score',
-                min: 55,
-                max: 100,
-                position: 'right'
-            }
+            type: 'value',
+            name: 'GPA',
+            min: 0,
+            max: 4.0,
+            position: 'left'
+        },
+        {
+            type: 'value',
+            name: 'Score',
+            min: 55,
+            max: 100,
+            position: 'right'
+        }
         ],
         series: [{
-                name: '学期GPA',
-                type: 'line',
-                yAxisIndex: 0,
-                encode: {
-                    x: 'sem',
-                    y: 'semGPA'
-                }
-            },
-            {
-                name: '累积GPA',
-                type: 'line',
-                yAxisIndex: 0,
-                encode: {
-                    x: 'sem',
-                    y: 'cumGPA'
-                }
-            },
-            {
-                name: '学期平均分',
-                type: 'line',
-                yAxisIndex: 1,
-                encode: {
-                    x: 'sem',
-                    y: 'semScore'
-                }
-            },
-            {
-                name: '累积平均分',
-                type: 'line',
-                yAxisIndex: 1,
-                encode: {
-                    x: 'sem',
-                    y: 'cumScore'
-                }
+            name: '学期GPA',
+            type: 'line',
+            yAxisIndex: 0,
+            encode: {
+                x: 'sem',
+                y: 'semGPA'
             }
+        },
+        {
+            name: '累积GPA',
+            type: 'line',
+            yAxisIndex: 0,
+            encode: {
+                x: 'sem',
+                y: 'cumGPA'
+            }
+        },
+        {
+            name: '学期平均分',
+            type: 'line',
+            yAxisIndex: 1,
+            encode: {
+                x: 'sem',
+                y: 'semScore'
+            }
+        },
+        {
+            name: '累积平均分',
+            type: 'line',
+            yAxisIndex: 1,
+            encode: {
+                x: 'sem',
+                y: 'cumScore'
+            }
+        }
         ]
     };
     scoreChart.setOption(option);
-    scoreChart.on('legendselectchanged', function(params) {
+    scoreChart.on('legendselectchanged', function (params) {
         let cnt = 0,
             onlyKey = '';
         for (const [key, value] of Object.entries(params.selected)) {
@@ -754,29 +767,29 @@ function drawScoreTrendingPlot() {
         if (cnt !== 1) {
             scoreChart.setOption({
                 series: [{
-                        name: '学期GPA',
-                        label: {
-                            show: false
-                        }
-                    },
-                    {
-                        name: '累积GPA',
-                        label: {
-                            show: false
-                        }
-                    },
-                    {
-                        name: '学期平均分',
-                        label: {
-                            show: false
-                        }
-                    },
-                    {
-                        name: '累积平均分',
-                        label: {
-                            show: false
-                        }
+                    name: '学期GPA',
+                    label: {
+                        show: false
                     }
+                },
+                {
+                    name: '累积GPA',
+                    label: {
+                        show: false
+                    }
+                },
+                {
+                    name: '学期平均分',
+                    label: {
+                        show: false
+                    }
+                },
+                {
+                    name: '累积平均分',
+                    label: {
+                        show: false
+                    }
+                }
                 ]
             });
             return;
