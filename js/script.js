@@ -1,12 +1,16 @@
 let faculty = ''; // 全局变量，储存学院名
 let fromUpdateGrades = false;
 
+const KEY_CONFIG = 'WHU-GPA-helperX::::::::config';
+
 // true 升序
 // false 降序
-const sorts = {
-    1: true, // 学年
-    2: true, // 学期
-    5: false, // 课程性质
+let _config = {
+    sorts: {
+        1: true, // 学年
+        2: true, // 学期
+        5: false, // 课程性质
+    }
 };
 
 /**
@@ -34,10 +38,27 @@ $.ajaxSetup({
     }
 });
 
+$(window).unload(function () {
+    localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
+});
+
+function loadConfig() {
+    const json = localStorage.getItem(KEY_CONFIG);
+    try {
+        const maybe = JSON.parse(json);
+        if (maybe && maybe['sorts']) // 务必进行校验和对配置进行迁移
+            _config = maybe;
+    } catch (error) {
+
+    }
+}
+
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
 $(window).on('load', function () {
+    loadConfig();
+
     fetchScores();
 
     const originalDialog = $.dialog;
@@ -169,7 +190,7 @@ function sortScores() {
     let rows = $('table:eq(1)')
         .find('tr:gt(0)')
         .toArray()
-        .sort(comparator(sorts));
+        .sort(comparator(_config.sorts));
     rows.splice(0, 0, $('table:eq(1)').find('tr:eq(0)'));
     $('table:eq(1)').children('tbody').empty().html(rows);
 
@@ -317,12 +338,16 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
         0: "升序",
         1: "降序",
     };
-    for (const x in modes)
-        $(`${prefix}:eq(${x})`)
-            .first()
-            .on('click', function () {
-                sorts[sortId] = parseInt(x) === 0;
-            });
+    for (const x in modes) {
+        const label = $(`${prefix}:eq(${x})`).first();
+        label.html(
+            label.html()
+                .replace(['正序', '倒序'][x], modes[x])
+        );
+        label.on('click', function () {
+            sorts[sortId] = parseInt(x) === 0;
+        });
+    }
 
     // 选中目前激活的模式
     $(`${prefix}:eq(${sorts[sortId] ? 0 : 1})`).first().click();
@@ -332,9 +357,9 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
  * 确定排序是正序还是反序
  */
 function bindAllSortsModeEvent() {
-    bindSortModeEvent(sorts, 1, 0);
-    bindSortModeEvent(sorts, 2, 1);
-    bindSortModeEvent(sorts, 5, 2);
+    bindSortModeEvent(_config.sorts, 1, 0);
+    bindSortModeEvent(_config.sorts, 2, 1);
+    bindSortModeEvent(_config.sorts, 5, 2);
 
     $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
 }
