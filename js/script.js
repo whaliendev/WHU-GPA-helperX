@@ -1,17 +1,27 @@
 let faculty = ''; // 全局变量，储存学院名
+let fromUpdateGrades = false;
 
 /**
  * 获取学院名
  */
 $.ajaxSetup({
     dataFilter: function (data, type) {
-        const response = JSON.parse(data);
-        if (
-            response['items'] &&
-            response['items'][0] &&
-            response['items'][0]['jgmc']
-        )
-            faculty = response['items'][0]['jgmc'];
+        fromUpdateGrades = false;
+
+        try {
+            // 响应数据不一定是JSON
+            const response = JSON.parse(data);
+            if (
+                response['items'] &&
+                response['items'][0] &&
+                response['items'][0]['jgmc']
+            ) {
+                faculty = response['items'][0]['jgmc'];
+                fromUpdateGrades = true;
+            }
+        } catch (error) {
+            // console.log(error);
+        }
         return data;
     }
 });
@@ -39,7 +49,9 @@ function fetchScores() {
 /**
  * Ajax请求完成后，触发配置动态UI
  */
-$(document).ajaxComplete(customDynamicUI);
+$(document).ajaxComplete(function () {
+    if (fromUpdateGrades) customDynamicUI();
+});
 
 /**
  * 配置成绩表格选项框
