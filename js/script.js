@@ -1,6 +1,14 @@
 let faculty = ''; // 全局变量，储存学院名
 let fromUpdateGrades = false;
 
+// true 升序
+// false 降序
+const sorts = {
+    1: true, // 学年
+    2: true, // 学期
+    5: false, // 课程性质
+};
+
 /**
  * 获取学院名
  */
@@ -29,7 +37,32 @@ $.ajaxSetup({
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
-$(window).on('load', fetchScores);
+$(window).on('load', function () {
+    fetchScores();
+
+    const originalDialog = $.dialog;
+    $.dialog = function (options) {
+        const hookedForSort = options && options['modalName'] === 'sortModal';
+        const result = originalDialog(
+            hookedForSort
+                ? {
+                    ...options,
+                    buttons: {
+                        ...options.buttons,
+                        success: {
+                            ...options.buttons.success,
+                            callback: fetchScores
+                        }
+                    }
+                }
+                : options
+        );
+        if (hookedForSort) bindAllSortsModeEvent();
+
+
+        return result;
+    }
+});
 
 function fetchScores() {
     $('#searchForm .chosen-select').first().val('');
@@ -118,7 +151,7 @@ function customStaticUI(catsList) {
         // console.log(fmBlock[0]);
         fmBlock.before(fmBlock.contents());
         fmBlock.css('display', 'none');
-        $('#btn_sortSetting').css('display', 'none');
+        // $('#btn_sortSetting').css('display', 'none');
     }
 
     // 如果没有添加课程选项框
@@ -136,7 +169,7 @@ function sortScores() {
     let rows = $('table:eq(1)')
         .find('tr:gt(0)')
         .toArray()
-        .sort(comparator([1, 2, 5]));
+        .sort(comparator(sorts));
     rows.splice(0, 0, $('table:eq(1)').find('tr:eq(0)'));
     $('table:eq(1)').children('tbody').empty().html(rows);
 
@@ -270,6 +303,41 @@ function addHeaderPanel() {
 }
 
 let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+
+/**
+ * 绑定排序模式选择的事件
+ * 
+ * @param {object} sorts 排序模式对象
+ * @param {number} sortId 在表格中列号
+ * @param {number} elementIndex 在sort_table_body中排序选项所在行号
+ */
+function bindSortModeEvent(sorts, sortId, elementIndex) {
+    const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
+    const modes = {
+        0: "升序",
+        1: "降序",
+    };
+    for (const x in modes)
+        $(`${prefix}:eq(${x})`)
+            .first()
+            .on('click', function () {
+                sorts[sortId] = parseInt(x) === 0;
+            });
+
+    // 选中目前激活的模式
+    $(`${prefix}:eq(${sorts[sortId] ? 0 : 1})`).first().click();
+}
+
+/**
+ * 确定排序是正序还是反序
+ */
+function bindAllSortsModeEvent() {
+    bindSortModeEvent(sorts, 1, 0);
+    bindSortModeEvent(sorts, 2, 1);
+    bindSortModeEvent(sorts, 5, 2);
+
+    $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
+}
 
 /**
  * 绑定各控件事件
@@ -458,18 +526,23 @@ function getCellValue(row, index) {
  * @returns 返回一个comparator function
  */
 function comparator(indexes) {
+
+    const compare = (valA, valB) => {
+        if ($.isNumeric(valA) && $.isNumeric(valB)) {
+            return valA - valB;
+        }
+        return valA.localeCompare(valB);
+    };
+
     return function (a, b) {
         let ans = 0;
 
-        for (let i = 0; i < indexes.length; i++) {
-            let valA = getCellValue(a, indexes[i]),
-                valB = getCellValue(b, indexes[i]);
+        for (const i in indexes) {
+            let valA = getCellValue(a, i),
+                valB = getCellValue(b, i);
 
-            if ($.isNumeric(valA) && $.isNumeric(valB)) {
-                ans = ans || valA - valB;
-            } else {
-                ans = ans || valA.localeCompare(valB);
-            }
+            const r = compare(valA, valB);
+            ans = ans || ((indexes[i] ? 1 : -1) * r);
             if (ans) break;
         }
         return ans;
