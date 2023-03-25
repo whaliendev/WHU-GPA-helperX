@@ -52,6 +52,7 @@
 ## 致谢
 
 非常感谢 [李叶](https://github.com/HackerLiye) 和他的 <a href="https://github.com/HackerLiye/WHU-GPA-helper" target="_blank">WHU-GPA-helper</a>项目。
+
 感谢[SalHe](https://github.com/SalHe)同学修复的导出问题和排序问题。
 
 ## 协议
