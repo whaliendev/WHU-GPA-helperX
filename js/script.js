@@ -124,12 +124,13 @@ function getSortsMode() {
 $(window).on('load', function () {
     loadConfig();
     bindAllHeaderClickEvent();
+    hookDialog();
 
     fetchScores();
+});
 
-    // TODO 使用 hook 替换
-    const originalDialog = $.dialog;
-    $.dialog = function (options) {
+function hookDialog() {
+    hook($, 'dialog', function (originalDialog, options) {
         const hookedForSort = options && options['modalName'] === 'sortModal';
         const result = originalDialog(
             hookedForSort
@@ -148,8 +149,8 @@ $(window).on('load', function () {
         if (hookedForSort) bindAllSortsModeEvent();
 
         return result;
-    }
-});
+    });
+}
 
 /**
  * HOOK
