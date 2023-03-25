@@ -1,10 +1,9 @@
 let faculty = ''; // 全局变量，储存学院名
-let fromUpdateGrades = false;
+let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
 
-const KEY_CONFIG = 'WHU-GPA-helperX::::::::config';
+const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
 
-// true 升序
-// false 降序
+// 排序字段的默认值，其中true表示升序，false表示降序
 let _config = {
     sorts: {
         1: true, // 学年
@@ -12,6 +11,19 @@ let _config = {
         5: false, // 课程性质
     }
 };
+
+/***** 图表相关的全局变量 *****/
+
+let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+// 学分按课程类别的数组
+// Array[category, credits count]
+let creditsDataset = [];
+
+// 每学期的成绩记录数组
+// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
+let recordDataset = [];
+
+/***** end of 图表相关的全局变量 *****/
 
 /**
  * 获取学院名
@@ -44,12 +56,9 @@ $(window).unload(function () {
 
 function loadConfig() {
     const json = localStorage.getItem(KEY_CONFIG);
-    try {
-        const maybe = JSON.parse(json);
-        if (maybe && maybe['sorts']) // 务必进行校验和对配置进行迁移
-            _config = maybe;
-    } catch (error) {
-
+    const maybe = JSON.parse(json);
+    if (maybe && maybe['sorts']) {  // 务必进行校验和对配置进行迁移
+        _config = maybe;
     }
 }
 
@@ -323,16 +332,16 @@ function addHeaderPanel() {
     observer.observe(headerInfo);
 }
 
-let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
-
 /**
- * 绑定排序模式选择的事件
+ * 绑定排序模式选择的事件，改善了左上角小齿轮调出Modal的显示方式
  * 
  * @param {object} sorts 排序模式对象
- * @param {number} sortId 在表格中列号
- * @param {number} elementIndex 在sort_table_body中排序选项所在行号
+ * @param {number} sortId 在表格中列号， 0-based
+ * @param {number} elementIndex 在sort_table_body中排序选项所在行号（sort_table_body属于左上角小
+ * 齿轮调出的modal）
  */
 function bindSortModeEvent(sorts, sortId, elementIndex) {
+    // Note(hwa): 暂时不考虑i18n适配
     const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
     const modes = {
         0: "升序",
@@ -357,6 +366,7 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
  * 确定排序是正序还是反序
  */
 function bindAllSortsModeEvent() {
+    // TODO(hwa): 考虑将列上排序（上下箭头）和小齿轮排序逻辑统一起来
     bindSortModeEvent(_config.sorts, 1, 0);
     bindSortModeEvent(_config.sorts, 2, 1);
     bindSortModeEvent(_config.sorts, 5, 2);
@@ -384,7 +394,7 @@ function bindEvents() {
         updateAllScores();
     });
 
-    // 全选/全不选，我也不知道这个意义是啥，但是李叶大大加了
+    // 全选/全不选
     $('#x-sel-all').click(() => {
         if ($('input[name="x-course-select"]:checked').length === 0) {
             $('input[name="x-course-select"]').prop('checked', true);
@@ -418,6 +428,7 @@ function bindEvents() {
             $('input[name="x-selbox"]').prop('checked', true);
         });
         updateAllScores();
+        bindAllSortsModeEvent();
     });
 
     // 图表
@@ -697,13 +708,6 @@ function updateAllScores() {
 }
 
 /********************************  图表  ************************************* */
-// 学分按课程类别的数组
-// Array[category, credits count]
-let creditsDataset = [];
-
-// 每学期的成绩记录数组
-// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
-let recordDataset = [];
 
 /**
  * 绘制学分按课程类别分类的bar图，方便选课的时候用
