@@ -46,6 +46,22 @@ $.ajaxSetup({
         } catch (error) {
             // console.log(error);
         }
+        fromUpdateGrades = false;
+
+        try {
+            // 响应数据不一定是JSON
+            const response = JSON.parse(data);
+            if (
+                response['items'] &&
+                response['items'][0] &&
+                response['items'][0]['jgmc']
+            ) {
+                faculty = response['items'][0]['jgmc'];
+                fromUpdateGrades = true;
+            }
+        } catch (error) {
+            // console.log(error);
+        }
         return data;
     }
 });
@@ -65,6 +81,34 @@ function loadConfig() {
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
+$(window).on('load', function () {
+    loadConfig();
+
+    fetchScores();
+
+    const originalDialog = $.dialog;
+    $.dialog = function (options) {
+        const hookedForSort = options && options['modalName'] === 'sortModal';
+        const result = originalDialog(
+            hookedForSort
+                ? {
+                    ...options,
+                    buttons: {
+                        ...options.buttons,
+                        success: {
+                            ...options.buttons.success,
+                            callback: fetchScores
+                        }
+                    }
+                }
+                : options
+        );
+        if (hookedForSort) bindAllSortsModeEvent();
+
+
+        return result;
+    }
+});
 $(window).on('load', function () {
     loadConfig();
 
