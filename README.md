@@ -13,13 +13,9 @@
 
 你可以手动的将 release 页面最新包添加到你的 chrome 浏览器中（在 chrome://extensions 里通过开发者模式）或者从 Chrome extension store 下载到你的浏览器。
 
-### 太长不读篇
-
-在 chrome extension store 下载本扩展到谷歌浏览器，然后使用就可以了。
-
 ### 通过 chrome 开发者模式
 
-你应该知道通过这种方式需要先将最新代码下载到你电脑本地 (`git clone` 或者从 [发布页面](https://github.com/whaliendev/WHU-GPA-helperX/releases)下载压缩包)。然后，如果需要的话，把他们解压缩到你电脑的一个合适的路径下。之后，去 Chrome 扩展管理页面（地址栏输入 chrome://extensions）打开开发者模式，加载该路径到你的谷歌浏览器即可。
+通过这种方式需要先将最新代码下载到你电脑本地 (`git clone` 或者从 [发布页面](https://github.com/whaliendev/WHU-GPA-helperX/releases)下载压缩包)。然后，把他们解压缩到你电脑的一个合适的路径下。之后，去 Chrome 扩展管理页面（地址栏输入 chrome://extensions）打开开发者模式，加载该路径到你的谷歌浏览器即可。
 
 <img src="docs/manage.gif">
 
@@ -28,6 +24,11 @@
 去 [chrome 扩展商店](https://chrome.google.com/webstore/detail/%E6%AD%A6%E6%B1%89%E5%A4%A7%E5%AD%A6%E6%88%90%E7%BB%A9%E5%8A%A9%E6%89%8Bx/jopdhihepdphcbmbhkhjppilomdgdiaj) 添加本扩展到你的谷歌浏览器。值得一提的是，通过这种方式获取的本扩展有时候版本会低一些（由于上线 Chrome 扩展商店需要他们审核一段时间）。
 
 当你通过上述两种方式之一安装本扩展后，在[武大新教务系统上](https://jwgl.whu.edu.cn/xtgl/index_initMenu.html)本扩展会自动触发。希望能够对你有点点帮助 😀
+
+## TODO
+
+- [ ] 统一 sortModal，表头和 localStorage 中的排序方式和数据
+- [ ] 重构：点标头排序的时候，实际上应该按`1, 2, clicked`顺序进行排序，目前是按`1, 2, 5, clicked`排序。
 
 ## 浏览器兼容性
 
@@ -59,7 +60,7 @@
 
 [GPLv3](LICENSE)
 
-<center>Copyright © 2021 Hwa</center>
+<center>Copyright © 2023 Hwa</center>
 
 ---
 
