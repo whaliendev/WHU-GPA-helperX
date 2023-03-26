@@ -9,11 +9,7 @@ let _config = {
         1: true, // 学年
         2: true, // 学期
         5: false, // 课程性质
-    },
-    headerSorts: {}, // 表头排序模式
-    multiSort: false, // 是否支持多键排序
-    lastClickedHeader: undefined, // 最后被点击的表头
-    keyOrders: [1, 2, 5], // KEY排序顺序(目前要求键的优先性：学年>学期>课程性质>自定义的一列)
+    }
 };
 
 /***** 图表相关的全局变量 *****/
@@ -58,64 +54,12 @@ $(window).unload(function () {
     localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
 });
 
-/**
- * 合并配置
- * @param {*} default_ 默认配置
- * @param {*} new_ 新配置
- * @returns 合并后的配置
- */
-function mergeConfig(default_, new_) {
-    if (new_ === null || new_ === undefined) return default_;
-    if (typeof default_ !== typeof new_) {
-        return new_;
-    }
-    if (typeof default_ === 'object') {
-        if (Array.isArray(default_)) {
-            return Array.isArray(new_) ? new_ : default_;
-        }
-
-        const newObj = {};
-        for (key in default_) {
-            newObj[key] = mergeConfig(default_[key], new_[key]);
-        }
-        return newObj;
-    }
-
-    return new_;
-}
-
-/**
- * 加载配置
- */
 function loadConfig() {
     const json = localStorage.getItem(KEY_CONFIG);
     const maybe = JSON.parse(json);
-    _config = mergeConfig(_config, maybe);
-
-    if (_config.multiSort) {
-        // TODO 实现自定义多键排序（点击表头多键排序需要解决考虑键的优先性）
-        console.warn("暂不支持自定义多键排序");
-        _config.multiSort = false;
+    if (maybe && maybe['sorts']) {  // 务必进行校验和对配置进行迁移
+        _config = maybe;
     }
-    _config.lastClickedHeader = undefined;
-}
-
-/**
- * 获取排序设置
- * @returns {[ {[key in number]: boolean}, number[] ]} 返回一个包含排序模式的对象以及键优先序列的数组。
- */
-function getSortsMode() {
-    const keyOrders =
-        (
-            _config.multiSort
-                ? [..._config.keyOrders, ...Object.keys(_config.headerSorts)]
-                : [..._config.keyOrders, _config.lastClickedHeader]
-        )
-            .filter((_, x) => x !== undefined);
-    const sortsMode = _config.multiSort
-        ? { ..._config.sorts, ..._config.headerSorts, }
-        : { ..._config.sorts, [_config.lastClickedHeader]: _config.headerSorts[_config.lastClickedHeader] };
-    return [sortsMode, keyOrders];
 }
 
 /**
@@ -123,11 +67,9 @@ function getSortsMode() {
  */
 $(window).on('load', function () {
     loadConfig();
-    bindAllHeaderClickEvent();
 
     fetchScores();
 
-    // TODO 使用 hook 替换
     const originalDialog = $.dialog;
     $.dialog = function (options) {
         const hookedForSort = options && options['modalName'] === 'sortModal';
@@ -146,23 +88,10 @@ $(window).on('load', function () {
                 : options
         );
         if (hookedForSort) bindAllSortsModeEvent();
-
+        
         return result;
     }
 });
-
-/**
- * HOOK
- * @param {object} object 被拦截对象
- * @param {string} functionKey 函数KEY
- * @param {(original: Function, ...args: any[]) => object} handler 处理函数
- */
-function hook(object, functionKey, handler) {
-    const original = object[functionKey];
-    object[functionKey] = function () {
-        return handler(original, ...arguments);
-    }
-}
 
 function fetchScores() {
     $('#searchForm .chosen-select').first().val('');
@@ -269,7 +198,7 @@ function sortScores() {
     let rows = $('table:eq(1)')
         .find('tr:gt(0)')
         .toArray()
-        .sort(comparator(getSortsMode()));
+        .sort(comparator(_config.sorts));
     rows.splice(0, 0, $('table:eq(1)').find('tr:eq(0)'));
     $('table:eq(1)').children('tbody').empty().html(rows);
 
@@ -442,48 +371,6 @@ function bindAllSortsModeEvent() {
     bindSortModeEvent(_config.sorts, 5, 2);
 
     $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
-}
-
-/**
- * 绑定表头单击事件（以便自定义表头排序）
- */
-function bindAllHeaderClickEvent() {
-    function selectMode(span, asc) {
-        if (asc === undefined) {
-            span.css('display', 'none');
-            return;
-        }
-        span.css('display', 'inline');
-        span.find(`span[sort=${asc ? 'asc' : 'desc'}]`).removeClass('ui-state-disabled');
-        span.find(`span[sort=${!asc ? 'asc' : 'desc'}]`).addClass('ui-state-disabled');
-    }
-
-    $('.ui-jqgrid-htable tr th')
-        .each(function (index, th) {
-            if (index === 0) return;
-
-            th = $(th);
-            const div = th.find('div');
-            const span = div.find('span.s-ico');
-
-            if (_config.headerSorts[index] !== undefined) {
-                selectMode(span, _config.headerSorts[index]);
-            }
-
-            if (_config.multiSort) th.unbind('click');
-            div.on('click', function () {
-                _config.lastClickedHeader = index;
-
-                // 升序 -> 降序 -> 不排序
-                if (_config.headerSorts[index] === false) {
-                    _config.headerSorts[index] = undefined;
-                    _config.lastClickedHeader = undefined;
-                }
-                else
-                    _config.headerSorts[index] = !_config.headerSorts[index];
-                selectMode(span, _config.headerSorts[index]);
-            });
-        });
 }
 
 /**
@@ -670,10 +557,10 @@ function getCellValue(row, index) {
 
 /**
  * 根据传入的列索引数组，返回一个依次比较各列的比较器函数
- * @param {[ {[key in number]: boolean}, number[] ]} 一个包含排序模式的对象以及键优先序列的数组。
+ * @param {Array} indexes 包含需要作为排序标准的列索引值，0-based, 顺序很重要
  * @returns 返回一个comparator function
  */
-function comparator([indexes, keys]) {
+function comparator(indexes) {
 
     const compare = (valA, valB) => {
         if ($.isNumeric(valA) && $.isNumeric(valB)) {
@@ -685,7 +572,7 @@ function comparator([indexes, keys]) {
     return function (a, b) {
         let ans = 0;
 
-        for (const i of keys) {
+        for (const i in indexes) {
             let valA = getCellValue(a, i),
                 valB = getCellValue(b, i);
 
