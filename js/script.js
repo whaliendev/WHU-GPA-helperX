@@ -1,19 +1,18 @@
 let faculty = ''; // 全局变量，储存学院名
 let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
 
-const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
+const KEY_CONFIG = '.x-config';  // localstorage的配置key
 
 // 排序字段的默认值，其中true表示升序，false表示降序
 let _config = {
     sorts: {
         1: true, // 学年
         2: true, // 学期
-        5: false, // 课程性质
     },
     headerSorts: {}, // 表头排序模式
     multiSort: false, // 是否支持多键排序
     lastClickedHeader: undefined, // 最后被点击的表头
-    keyOrders: [1, 2, 5], // KEY排序顺序(目前要求键的优先性：学年>学期>课程性质>自定义的一列)
+    keyOrders: [1, 2], // KEY排序顺序(目前要求键的优先性：学年>学期>自定义的一列)
 };
 
 /***** 图表相关的全局变量 *****/
@@ -90,6 +89,8 @@ function mergeConfig(default_, new_) {
 function loadConfig() {
     const json = localStorage.getItem(KEY_CONFIG);
     const maybe = JSON.parse(json);
+    console.log("maybe", maybe);
+    console.log("config: ", _config);
     _config = mergeConfig(_config, maybe);
 
     if (_config.multiSort) {
@@ -97,7 +98,8 @@ function loadConfig() {
         console.warn("暂不支持自定义多键排序");
         _config.multiSort = false;
     }
-    _config.lastClickedHeader = undefined;
+    // _config.lastClickedHeader = undefined;
+    console.log('in load config', _config);
 }
 
 /**
@@ -115,6 +117,10 @@ function getSortsMode() {
     const sortsMode = _config.multiSort
         ? { ..._config.sorts, ..._config.headerSorts, }
         : { ..._config.sorts, [_config.lastClickedHeader]: _config.headerSorts[_config.lastClickedHeader] };
+    Object.keys(sortsMode).forEach(key => sortsMode[key] === undefined && delete sortsMode[key]);
+    keyOrders.forEach((key) => {
+        if(sortsMode[key] === undefined) sortsMode[key] = false;
+    });
     return [sortsMode, keyOrders];
 }
 
@@ -191,8 +197,9 @@ $(document).ajaxComplete(function () {
  * 配置成绩表格选项框
  */
 function customDynamicUI() {
-  // 过滤不是获取成绩的请求
-  if ($('table:eq(1) tr:gt(0)').length <= 2) return;
+    console.log('new round');
+    // 过滤不是获取成绩的请求
+    if ($('table:eq(1) tr:gt(0)').length <= 2) return;
 
     $('#jqgh_tabGrid_kch')
         .contents()
@@ -211,23 +218,24 @@ function customDynamicUI() {
                     `<input type="checkbox" name="x-course-select" checked="checked" />`
                 );
 
-      const courseCat = $.trim($(this).find('td:eq(5)').text());
-      const courseIns = $.trim($(this).find('td:eq(12)').text());
-      // console.log(faculty, courseCat, courseIns);
-      if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
-        $(this)
-          .find('td:eq(5)')
-          .text('跨院' + courseCat);
-      }
-      catsList.push($.trim($(this).find('td:eq(5)').text()));
-    } else {
-      $(this)
-        .find('td:eq(3)')
-        .html(`<input type="checkbox" name="x-course-select" />`);
-    }
-  });
-  customStaticUI(catsList);
-  sortScores();
+            const courseCat = $.trim($(this).find('td:eq(5)').text());
+            const courseIns = $.trim($(this).find('td:eq(12)').text());
+            // console.log(faculty, courseCat, courseIns);
+            if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
+                $(this)
+                    .find('td:eq(5)')
+                    .text('跨院' + courseCat);
+            }
+            catsList.push($.trim($(this).find('td:eq(5)').text()));
+        } else {
+            $(this)
+                .find('td:eq(3)')
+                .html(`<input type="checkbox" name="x-course-select" />`);
+        }
+    });
+    customStaticUI(catsList);
+    sortScores();
+    bindEvents();
 }
 
 /**
@@ -267,6 +275,7 @@ function customStaticUI(catsList) {
  * 对返回成绩进行重新排序，添加每学期的信息显示栏
  */
 function sortScores() {
+    console.log(getSortsMode());
     let rows = $('table:eq(1)')
         .find('tr:gt(0)')
         .toArray()
@@ -283,25 +292,24 @@ function sortScores() {
             if (time[0] !== year || time[1] !== sem) {
                 let semGPA = calcSemGPA(year, sem);
                 $(this).before(`
-              <tr class="x-sem-row">
-                  <td colspan="22" class="x-sem-info">
-                  <strong class="x-info-block">
-                  <em>${year}</em>&nbsp;学年&nbsp;&nbsp;第&nbsp;<em>${sem}</em>&nbsp;学期&nbsp;&nbsp;&nbsp;&nbsp;
-                  学分数：<span>${semGPA[0]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                  平均GPA：<span>${semGPA[1]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                  平均成绩：<span>${semGPA[2]}</span>
-                  </strong>
-                  </td>
-              </tr>
-          `);
-      }
-      time = [year, sem];
-      if ($(this).index() % 2 === 0) {
-        $(this).addClass('x-alt');
-      }
+                    <tr class="x-sem-row">
+                        <td colspan="22" class="x-sem-info">
+                        <strong class="x-info-block">
+                        <em>${year}</em>&nbsp;学年&nbsp;&nbsp;第&nbsp;<em>${sem}</em>&nbsp;学期&nbsp;&nbsp;&nbsp;&nbsp;
+                        学分数：<span>${semGPA[0]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                        平均GPA：<span>${semGPA[1]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                        平均成绩：<span>${semGPA[2]}</span>
+                        </strong>
+                        </td>
+                    </tr>
+                `);
+            }
+            time = [year, sem];
+            if ($(this).index() % 2 === 0) {
+                $(this).addClass('x-alt');
+            }
     });
-  updateAllScores();
-  bindEvents();
+    updateAllScores();
 }
 
 /**
@@ -438,10 +446,8 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
  * 确定排序是正序还是反序
  */
 function bindAllSortsModeEvent() {
-    // TODO(hwa): 考虑将列上排序（上下箭头）和小齿轮排序逻辑统一起来
     bindSortModeEvent(_config.sorts, 1, 0);
     bindSortModeEvent(_config.sorts, 2, 1);
-    bindSortModeEvent(_config.sorts, 5, 2);
 
     $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
 }
@@ -542,7 +548,19 @@ function bindEvents() {
             $('input[name="x-selbox"]').prop('checked', true);
         });
         updateAllScores();
-        bindAllSortsModeEvent();
+
+        // 替换排序相关的配置为默认值
+        Object.assign( _config, {
+            sorts: {
+                1: true,
+                2: true,
+            },
+            headerSorts: {},
+            multiSort: false,
+            lastClickedHeader: undefined,
+            keyOrders: [1, 2]
+        });
+        fetchScores();
     });
 
     // 图表
@@ -671,7 +689,7 @@ function getCellValue(row, index) {
 }
 
 /**
- * 根据传入的列索引数组，返回一个依次比较各列的比较器函数
+ * 根据传入的`[ 排序模式对象，排序键优先级 ]`数组返回一个比较器函数
  * @param {[ {[key in number]: boolean}, number[] ]} 一个包含排序模式的对象以及键优先序列的数组。
  * @returns 返回一个comparator function
  */
