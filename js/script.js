@@ -1,25 +1,169 @@
 let faculty = ''; // 全局变量，储存学院名
+let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
+
+const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
+
+// 排序字段的默认值，其中true表示升序，false表示降序
+let _config = {
+    sorts: {
+        1: true, // 学年
+        2: true, // 学期
+        5: false, // 课程性质
+    },
+    headerSorts: {}, // 表头排序模式
+    multiSort: false, // 是否支持多键排序
+    lastClickedHeader: undefined, // 最后被点击的表头
+    keyOrders: [1, 2, 5], // KEY排序顺序(目前要求键的优先性：学年>学期>课程性质>自定义的一列)
+};
+
+/***** 图表相关的全局变量 *****/
+
+let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+// 学分按课程类别的数组
+// Array[category, credits count]
+let creditsDataset = [];
+
+// 每学期的成绩记录数组
+// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
+let recordDataset = [];
+
+/***** end of 图表相关的全局变量 *****/
 
 /**
  * 获取学院名
  */
 $.ajaxSetup({
-  dataFilter: function (data, type) {
-    const response = JSON.parse(data);
-    if (
-      response['items'] &&
-      response['items'][0] &&
-      response['items'][0]['jgmc']
-    )
-      faculty = response['items'][0]['jgmc'];
-    return data;
-  }
+    dataFilter: function (data, type) {
+        fromUpdateGrades = false;
+
+        try {
+            // 响应数据不一定是JSON
+            const response = JSON.parse(data);
+            if (
+                response['items'] &&
+                response['items'][0] &&
+                response['items'][0]['jgmc']
+            ) {
+                faculty = response['items'][0]['jgmc'];
+                fromUpdateGrades = true;
+            }
+        } catch (error) {
+            // console.log(error);
+        }
+        return data;
+    }
 });
+
+$(window).unload(function () {
+    localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
+});
+
+/**
+ * 合并配置
+ * @param {*} default_ 默认配置
+ * @param {*} new_ 新配置
+ * @returns 合并后的配置
+ */
+function mergeConfig(default_, new_) {
+    if (new_ === null || new_ === undefined) return default_;
+    if (typeof default_ !== typeof new_) {
+        return new_;
+    }
+    if (typeof default_ === 'object') {
+        if (Array.isArray(default_)) {
+            return Array.isArray(new_) ? new_ : default_;
+        }
+
+        const newObj = {};
+        for (key in default_) {
+            newObj[key] = mergeConfig(default_[key], new_[key]);
+        }
+        return newObj;
+    }
+
+    return new_;
+}
+
+/**
+ * 加载配置
+ */
+function loadConfig() {
+    const json = localStorage.getItem(KEY_CONFIG);
+    const maybe = JSON.parse(json);
+    _config = mergeConfig(_config, maybe);
+
+    if (_config.multiSort) {
+        // TODO 实现自定义多键排序（点击表头多键排序需要解决考虑键的优先性）
+        console.warn("暂不支持自定义多键排序");
+        _config.multiSort = false;
+    }
+    _config.lastClickedHeader = undefined;
+}
+
+/**
+ * 获取排序设置
+ * @returns {[ {[key in number]: boolean}, number[] ]} 返回一个包含排序模式的对象以及键优先序列的数组。
+ */
+function getSortsMode() {
+    const keyOrders =
+        (
+            _config.multiSort
+                ? [..._config.keyOrders, ...Object.keys(_config.headerSorts)]
+                : [..._config.keyOrders, _config.lastClickedHeader]
+        )
+            .filter((_, x) => x !== undefined);
+    const sortsMode = _config.multiSort
+        ? { ..._config.sorts, ..._config.headerSorts, }
+        : { ..._config.sorts, [_config.lastClickedHeader]: _config.headerSorts[_config.lastClickedHeader] };
+    return [sortsMode, keyOrders];
+}
 
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
-$(window).on('load', fetchScores);
+$(window).on('load', function () {
+    loadConfig();
+    bindAllHeaderClickEvent();
+    hookDialog();
+
+    fetchScores();
+});
+
+function hookDialog() {
+    hook($, 'dialog', function (originalDialog, options) {
+        const hookedForSort = options && options['modalName'] === 'sortModal';
+        const result = originalDialog(
+            hookedForSort
+                ? {
+                    ...options,
+                    buttons: {
+                        ...options.buttons,
+                        success: {
+                            ...options.buttons.success,
+                            callback: fetchScores
+                        }
+                    }
+                }
+                : options
+        );
+        if (hookedForSort) bindAllSortsModeEvent();
+
+        return result;
+    });
+}
+
+/**
+ * HOOK
+ * @param {object} object 被拦截对象
+ * @param {string} functionKey 函数KEY
+ * @param {(original: Function, ...args: any[]) => object} handler 处理函数
+ */
+function hook(object, functionKey, handler) {
+    const original = object[functionKey];
+    object[functionKey] = function () {
+        return handler(original, ...arguments);
+    }
+}
 
 function fetchScores() {
   $('#searchForm .chosen-select').first().val('');
@@ -39,7 +183,9 @@ function fetchScores() {
 /**
  * Ajax请求完成后，触发配置动态UI
  */
-$(document).ajaxComplete(customDynamicUI);
+$(document).ajaxComplete(function () {
+    if (fromUpdateGrades) customDynamicUI();
+});
 
 /**
  * 配置成绩表格选项框
@@ -48,22 +194,22 @@ function customDynamicUI() {
   // 过滤不是获取成绩的请求
   if ($('table:eq(1) tr:gt(0)').length <= 2) return;
 
-  $('#jqgh_tabGrid_kch')
-    .contents()
-    .filter(function () {
-      return this.nodeType === 3;
-    })
-    .replaceWith('选择');
+    $('#jqgh_tabGrid_kch')
+        .contents()
+        .filter(function () {
+            return this.nodeType === 3;
+        })
+        .replaceWith('选择');
 
-  const catsList = []; // 获取课程类别的数组，未去重
-  $('table:eq(1) tr:gt(0)').each(function () {
-    const score = parseFloat($(this).find('td:eq(7)').text());
-    if (score >= 60.0) {
-      $(this)
-        .find('td:eq(3)')
-        .html(
-          `<input type="checkbox" name="x-course-select" checked="checked" />`
-        );
+    const catsList = []; // 获取课程类别的数组，未去重
+    $('table:eq(1) tr:gt(0)').each(function () {
+        const score = parseFloat($(this).find('td:eq(7)').text());
+        if (score >= 60.0) {
+            $(this)
+                .find('td:eq(3)')
+                .html(
+                    `<input type="checkbox" name="x-course-select" checked="checked" />`
+                );
 
       const courseCat = $.trim($(this).find('td:eq(5)').text());
       const courseIns = $.trim($(this).find('td:eq(12)').text());
@@ -89,12 +235,25 @@ function customDynamicUI() {
  * @param {Array} catsList 未去重课程类别列表。因为配置动态UI可能会执行多次，所以不在配置动态UI进行去重
  */
 function customStaticUI(catsList) {
-  $('#topButton')[0].onclick = null;
-  // 如果没有添加Button控件和图表Modal
-  if ($('#x-sel-all').length === 0) {
-    addButtons();
-    addGraphModal();
-  }
+    $('#topButton')[0].onclick = null;
+    // 如果没有添加Button控件和图表Modal
+    if ($('#x-sel-all').length === 0) {
+        addButtons();
+        addGraphModal();
+    }
+
+    /**
+     * 说明：绝对不要交换当前这段代码和下段代码。
+     * 因为.x-controls-container的位置变化会触发intersection observer的单向添加is-pinned类。
+     * 当然这里有更好的解决办法，不过先这样fix一下。
+     */
+    if ($('#div-data .col-md-10.col-sm-10').length !== 0) {
+        let fmBlock = $('#div-data .col-md-10.col-sm-10');
+        // console.log(fmBlock[0]);
+        fmBlock.before(fmBlock.contents());
+        fmBlock.css('display', 'none');
+        // $('#btn_sortSetting').css('display', 'none');
+    }
 
   // 如果没有添加课程选项框
   if ($('input[name="x-selbox"]').length === 0) {
@@ -108,22 +267,22 @@ function customStaticUI(catsList) {
  * 对返回成绩进行重新排序，添加每学期的信息显示栏
  */
 function sortScores() {
-  let rows = $('table:eq(1)')
-    .find('tr:gt(0)')
-    .toArray()
-    .sort(multiComparator([1, 2, 5]));
-  rows.splice(0, 0, $('table:eq(1)').find('tr:eq(0)'));
-  $('table:eq(1)').children('tbody').empty().html(rows);
+    let rows = $('table:eq(1)')
+        .find('tr:gt(0)')
+        .toArray()
+        .sort(comparator(getSortsMode()));
+    rows.splice(0, 0, $('table:eq(1)').find('tr:eq(0)'));
+    $('table:eq(1)').children('tbody').empty().html(rows);
 
-  let time = ['', 0];
-  $('table:eq(1)')
-    .find('tr:gt(0)')
-    .each(function () {
-      let year = $(this).find('td:eq(1)').text();
-      let sem = parseInt($(this).find('td:eq(2)').text());
-      if (time[0] !== year || time[1] !== sem) {
-        let semGPA = calcSemGPA(year, sem);
-        $(this).before(`
+    let time = ['', 0];
+    $('table:eq(1)')
+        .find('tr:gt(0)')
+        .each(function () {
+            let year = $(this).find('td:eq(1)').text();
+            let sem = parseInt($(this).find('td:eq(2)').text());
+            if (time[0] !== year || time[1] !== sem) {
+                let semGPA = calcSemGPA(year, sem);
+                $(this).before(`
               <tr class="x-sem-row">
                   <td colspan="22" class="x-sem-info">
                   <strong class="x-info-block">
@@ -232,21 +391,102 @@ function addCourseSelectBox(catsList) {
  * 添加控制container的悬浮显示效果
  */
 function addHeaderPanel() {
-  // add shadow to controls container, when controls container is positioned stuck.
-  // https://css-tricks.com/how-to-detect-when-a-sticky-element-gets-pinned/
-  // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
-  const headerInfo = $('.x-controls-container')[0];
-  const observer = new IntersectionObserver(
-    ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1),
-    {
-      rootMargin: '-28px 0px 0px',
-      threshold: [1]
+    // add shadow to controls container, when controls container is positioned stuck.
+    // https://css-tricks.com/how-to-detect-when-a-sticky-element-gets-pinned/
+    // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
+    const headerInfo = $('.x-controls-container')[0];
+    const observer = new IntersectionObserver(
+        ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1), {
+        rootMargin: '-28px 0px 0px',
+        threshold: [1]
     }
-  );
-  observer.observe(headerInfo);
+    );
+    observer.observe(headerInfo);
 }
 
-let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+/**
+ * 绑定排序模式选择的事件，改善了左上角小齿轮调出Modal的显示方式
+ * 
+ * @param {object} sorts 排序模式对象
+ * @param {number} sortId 在表格中列号， 0-based
+ * @param {number} elementIndex 在sort_table_body中排序选项所在行号（sort_table_body属于左上角小
+ * 齿轮调出的modal）
+ */
+function bindSortModeEvent(sorts, sortId, elementIndex) {
+    // Note(hwa): 暂时不考虑i18n适配
+    const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
+    const modes = {
+        0: "升序",
+        1: "降序",
+    };
+    for (const x in modes) {
+        const label = $(`${prefix}:eq(${x})`).first();
+        label.html(
+            label.html()
+                .replace(['正序', '倒序'][x], modes[x])
+        );
+        label.on('click', function () {
+            sorts[sortId] = parseInt(x) === 0;
+        });
+    }
+
+    // 选中目前激活的模式
+    $(`${prefix}:eq(${sorts[sortId] ? 0 : 1})`).first().click();
+}
+
+/**
+ * 确定排序是正序还是反序
+ */
+function bindAllSortsModeEvent() {
+    // TODO(hwa): 考虑将列上排序（上下箭头）和小齿轮排序逻辑统一起来
+    bindSortModeEvent(_config.sorts, 1, 0);
+    bindSortModeEvent(_config.sorts, 2, 1);
+    bindSortModeEvent(_config.sorts, 5, 2);
+
+    $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
+}
+
+/**
+ * 绑定表头单击事件（以便自定义表头排序）
+ */
+function bindAllHeaderClickEvent() {
+    function selectMode(span, asc) {
+        if (asc === undefined) {
+            span.css('display', 'none');
+            return;
+        }
+        span.css('display', 'inline');
+        span.find(`span[sort=${asc ? 'asc' : 'desc'}]`).removeClass('ui-state-disabled');
+        span.find(`span[sort=${!asc ? 'asc' : 'desc'}]`).addClass('ui-state-disabled');
+    }
+
+    $('.ui-jqgrid-htable tr th')
+        .each(function (index, th) {
+            if (index === 0) return;
+
+            th = $(th);
+            const div = th.find('div');
+            const span = div.find('span.s-ico');
+
+            if (_config.headerSorts[index] !== undefined) {
+                selectMode(span, _config.headerSorts[index]);
+            }
+
+            if (_config.multiSort) th.unbind('click');
+            div.on('click', function () {
+                _config.lastClickedHeader = index;
+
+                // 升序 -> 降序 -> 不排序
+                if (_config.headerSorts[index] === false) {
+                    _config.headerSorts[index] = undefined;
+                    _config.lastClickedHeader = undefined;
+                }
+                else
+                    _config.headerSorts[index] = !_config.headerSorts[index];
+                selectMode(span, _config.headerSorts[index]);
+            });
+        });
+}
 
 /**
  * 绑定各控件事件
@@ -255,46 +495,32 @@ function bindEvents() {
   // 响应表格中的复选框
   $('input[name="x-course-select"]').change(() => updateAllScores());
 
-  // 响应课程类别复选框
-  $('input[name="x-selbox"]').change((e) => {
-    const input = e.target;
-    $('table:eq(1) tr:gt(0)').each(function () {
-      if ($(this).find('td:eq(5)').text() === input.value) {
-        $(this)
-          .find('td:eq(3) input[name="x-course-select"]')
-          .prop('checked', input.checked);
-      }
+    // 响应课程类别复选框
+    $('input[name="x-selbox"]').change((e) => {
+        const input = e.target;
+        $('table:eq(1) tr:gt(0)').each(function () {
+            if ($(this).find('td:eq(5)').text() === input.value) {
+                $(this)
+                    .find('td:eq(3) input[name="x-course-select"]')
+                    .prop('checked', input.checked);
+            }
+        });
+        updateAllScores();
     });
-    updateAllScores();
-  });
 
-  // 导出到梦想珈
-  $('#x-export-grades').click(() => {
-    chrome.runtime.sendMessage(
-      'glcfnmkefnoikcjhjhfpneilpphinnag',
-      {
-        contentScriptQuery: 'exportGrades',
-        grades: 'math: this is a test api'
-      },
-      (res) => {
-        console.log('res: ', res);
-      }
-    );
-  });
-
-  // 全选/全不选，我也不知道这个意义是啥，但是李叶大大加了
-  $('#x-sel-all').click(() => {
-    if ($('input[name="x-course-select"]:checked').length === 0) {
-      $('input[name="x-course-select"]').prop('checked', true);
-      $('input[name="x-selbox"]').prop('checked', true);
-      $('#x-sel-all').text('全不选');
-    } else {
-      $('input[name="x-course-select"]').prop('checked', false);
-      $('input[name="x-selbox"]').prop('checked', false);
-      $('#x-sel-all').text('全选');
-    }
-    updateAllScores();
-  });
+    // 全选/全不选
+    $('#x-sel-all').click(() => {
+        if ($('input[name="x-course-select"]:checked').length === 0) {
+            $('input[name="x-course-select"]').prop('checked', true);
+            $('input[name="x-selbox"]').prop('checked', true);
+            $('#x-sel-all').text('全不选');
+        } else {
+            $('input[name="x-course-select"]').prop('checked', false);
+            $('input[name="x-selbox"]').prop('checked', false);
+            $('#x-sel-all').text('全选');
+        }
+        updateAllScores();
+    });
 
   // 反选
   $('#x-sel-rev').click(() => {
@@ -304,44 +530,45 @@ function bindEvents() {
     updateAllScores();
   });
 
-  // 复原
-  $('#x-sel-revert').click(() => {
-    $('table:eq(1) tr:gt(0)').each(function () {
-      const score = parseFloat($(this).find('td:eq(7)').text());
-      if (score >= 60.0) {
-        $(this).find('td:eq(3) input:checkbox').prop('checked', true);
-      } else {
-        $(this).find('td:eq(3) input:checkbox').prop('checked', false);
-      }
-      $('input[name="x-selbox"]').prop('checked', true);
+    // 复原
+    $('#x-sel-revert').click(() => {
+        $('table:eq(1) tr:gt(0)').each(function () {
+            const score = parseFloat($(this).find('td:eq(7)').text());
+            if (score >= 60.0) {
+                $(this).find('td:eq(3) input:checkbox').prop('checked', true);
+            } else {
+                $(this).find('td:eq(3) input:checkbox').prop('checked', false);
+            }
+            $('input[name="x-selbox"]').prop('checked', true);
+        });
+        updateAllScores();
+        bindAllSortsModeEvent();
     });
-    updateAllScores();
-  });
 
-  // 图表
-  $('#x-show-graph').click(() => {
-    $('#x-modal-overlay').addClass('x-open');
-    updateStatistics();
-    plots = drawStatisticPlot();
-  });
-  // 点击modal不关闭overlay
-  $('.x-modal').click(function (e) {
-    e.stopPropagation();
-  });
-  // 点击exit icon关闭overlay
-  $('.x-icon').click(() => {
-    closeModal();
-  });
-  // 直接点击overlay
-  $('#x-modal-overlay').click(function () {
-    closeModal();
-  });
-  // 点击modal上的复原按钮将课程选项更新，并重新绘图
-  $('#x-revert').click(() => {
-    $('#x-sel-revert').trigger('click');
-    updateStatistics();
-    plots = drawStatisticPlot();
-  });
+    // 图表
+    $('#x-show-graph').click(() => {
+        $('#x-modal-overlay').addClass('x-open');
+        updateStatistics();
+        plots = drawStatisticPlot();
+    });
+    // 点击modal不关闭overlay
+    $('.x-modal').click(function (e) {
+        e.stopPropagation();
+    });
+    // 点击exit icon关闭overlay
+    $('.x-icon').click(() => {
+        closeModal();
+    });
+    // 直接点击overlay
+    $('#x-modal-overlay').click(function () {
+        closeModal();
+    });
+    // 点击modal上的复原按钮将课程选项更新，并重新绘图
+    $('#x-revert').click(() => {
+        $('#x-sel-revert').trigger('click');
+        updateStatistics();
+        plots = drawStatisticPlot();
+    });
 }
 
 /**
@@ -366,12 +593,12 @@ function drawStatisticPlot() {
  * 更新统计图需要的数据
  */
 function updateStatistics() {
-  const creditsMap = new Map();
-  const trendingArray = [];
-  $('table:eq(1)')
-    .find('tr:gt(0)')
-    .each(function () {
-      const record = $(this).find('td:eq(5), td:eq(6)');
+    const creditsMap = new Map();
+    const trendingArray = [];
+    $('table:eq(1)')
+        .find('tr:gt(0)')
+        .each(function () {
+            const record = $(this).find('td:eq(5), td:eq(6)');
 
       if (record.length === 0) {
         // x-sem-row
@@ -445,26 +672,31 @@ function getCellValue(row, index) {
 
 /**
  * 根据传入的列索引数组，返回一个依次比较各列的比较器函数
- * @param {Array} indexes 包含需要作为排序标准的列索引值，0-based, 顺序很重要
+ * @param {[ {[key in number]: boolean}, number[] ]} 一个包含排序模式的对象以及键优先序列的数组。
  * @returns 返回一个comparator function
  */
-function multiComparator(indexes) {
-  return function (a, b) {
-    let ans = 0;
+function comparator([indexes, keys]) {
 
-    for (let i = 0; i < indexes.length; i++) {
-      let valA = getCellValue(a, indexes[i]),
-        valB = getCellValue(b, indexes[i]);
+    const compare = (valA, valB) => {
+        if ($.isNumeric(valA) && $.isNumeric(valB)) {
+            return valA - valB;
+        }
+        return valA.localeCompare(valB);
+    };
 
-      if ($.isNumeric(valA) && $.isNumeric(valB)) {
-        ans = ans || valA - valB;
-      } else {
-        ans = ans || valA.localeCompare(valB);
-      }
-      if (ans) break;
-    }
-    return ans;
-  };
+    return function (a, b) {
+        let ans = 0;
+
+        for (const i of keys) {
+            let valA = getCellValue(a, i),
+                valB = getCellValue(b, i);
+
+            const r = compare(valA, valB);
+            ans = ans || ((indexes[i] ? 1 : -1) * r);
+            if (ans) break;
+        }
+        return ans;
+    };
 }
 
 /**
@@ -473,13 +705,13 @@ function multiComparator(indexes) {
  * @returns 返回一个含三个元素的数组，分别对应总学分数，平均GPA，平均分
  */
 function calcGPA(scores) {
-  let totalScore = 0,
-    totalCredits = 0,
-    totalGPA = 0;
-  $(scores).each(function () {
-    let credit = parseFloat($(this)[0]);
-    let score = parseFloat($(this)[1]);
-    let GPA = parseFloat($(this)[2]);
+    let totalScore = 0,
+        totalCredits = 0,
+        totalGPA = 0;
+    $(scores).each(function () {
+        let credit = parseFloat($(this)[0]);
+        let score = parseFloat($(this)[1]);
+        let GPA = parseFloat($(this)[2]);
 
     if (score) {
       // if not NaN
@@ -507,24 +739,24 @@ function calcGPA(scores) {
  * @returns 返回一个含三个元素的数组，分别对应学年学期总学分数，平均GPA，平均分
  */
 function calcSemGPA(year, sem) {
-  let scores = [];
-  $('table:eq(1) tr:gt(0)').each(function () {
-    if (
-      $(this).find('td:eq(1)').text() === year &&
-      parseInt($(this).find('td:eq(2)').text()) === sem
-    ) {
-      // 学分，成绩，GPA
-      let row = [];
-      if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-        $(this)
-          .find('td:eq(6), td:eq(7), td:eq(9)')
-          .each(function () {
-            row.push($.trim($(this).text()));
-          });
-        scores.push(row);
-      }
-    }
-  });
+    let scores = [];
+    $('table:eq(1) tr:gt(0)').each(function () {
+        if (
+            $(this).find('td:eq(1)').text() === year &&
+            parseInt($(this).find('td:eq(2)').text()) === sem
+        ) {
+            // 学分，成绩，GPA
+            let row = [];
+            if ($(this).find('input[name="x-course-select"]').is(':checked')) {
+                $(this)
+                    .find('td:eq(6), td:eq(7), td:eq(9)')
+                    .each(function () {
+                        row.push($.trim($(this).text()));
+                    });
+                scores.push(row);
+            }
+        }
+    });
 
   return calcGPA(scores);
 }
@@ -533,18 +765,18 @@ function calcSemGPA(year, sem) {
  * 更新头部（总）成绩信息
  */
 function updateHeaderScores() {
-  let scores = [];
-  $('table tr:gt(0)').each(function () {
-    let row = [];
-    if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-      $(this)
-        .find('td:eq(6), td:eq(7), td:eq(9)')
-        .each(function () {
-          row.push($.trim($(this).text()));
-        });
-      scores.push(row);
-    }
-  });
+    let scores = [];
+    $('table tr:gt(0)').each(function () {
+        let row = [];
+        if ($(this).find('input[name="x-course-select"]').is(':checked')) {
+            $(this)
+                .find('td:eq(6), td:eq(7), td:eq(9)')
+                .each(function () {
+                    row.push($.trim($(this).text()));
+                });
+            scores.push(row);
+        }
+    });
 
   let info = calcGPA(scores);
 
@@ -557,28 +789,28 @@ function updateHeaderScores() {
  * 更新每学期的成绩信息
  */
 function updateSemScores() {
-  let semCount = $('tr.x-sem-row').length;
-  for (let i = 0; i < semCount; i++) {
-    let scores = [];
-    $('tr.x-sem-row')
-      .eq(i)
-      .nextUntil('tr.x-sem-row')
-      .each(function () {
-        let row = [];
-        if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-          $(this)
-            .find('td:eq(6), td:eq(7), td:eq(9)')
+    let semCount = $('tr.x-sem-row').length;
+    for (let i = 0; i < semCount; i++) {
+        let scores = [];
+        $('tr.x-sem-row')
+            .eq(i)
+            .nextUntil('tr.x-sem-row')
             .each(function () {
-              row.push($.trim($(this).text()));
+                let row = [];
+                if ($(this).find('input[name="x-course-select"]').is(':checked')) {
+                    $(this)
+                        .find('td:eq(6), td:eq(7), td:eq(9)')
+                        .each(function () {
+                            row.push($.trim($(this).text()));
+                        });
+                    scores.push(row);
+                }
             });
-          scores.push(row);
-        }
-      });
-    let info = calcGPA(scores);
-    $(`tr.x-sem-row:eq(${i}) span`).each(function (idx, _) {
-      $(this).text(info[idx]);
-    });
-  }
+        let info = calcGPA(scores);
+        $(`tr.x-sem-row:eq(${i}) span`).each(function (idx, _) {
+            $(this).text(info[idx]);
+        });
+    }
 }
 
 /**
@@ -590,13 +822,6 @@ function updateAllScores() {
 }
 
 /********************************  图表  ************************************* */
-// 学分按课程类别的数组
-// Array[category, credits count]
-let creditsDataset = [];
-
-// 每学期的成绩记录数组
-// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
-let recordDataset = [];
 
 /**
  * 绘制学分按课程类别分类的bar图，方便选课的时候用
@@ -662,160 +887,153 @@ function drawCreditsPlot() {
  * @returns {echartInstance} 当前图像的实例
  */
 function drawScoreTrendingPlot() {
-  // console.log(recordDataset);
-  var scoreChart = echarts.init(document.getElementById('x-graph2'));
-  option = {
-    animationDuration: 1000,
-    title: { text: 'Scores Trending Plot' },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'cross' }
-    },
-    toolbox: {
-      show: true,
-      feature: {
-        saveAsImage: {
-          title: 'Save'
-        }
-      },
-      right: '8px'
-    },
-    legend: {
-      // orient: 'vertical',
-      bottom: '80px',
-      left: 'center'
-    },
-    dataset: {
-      dimensions: [
-        'sem',
-        'semCredits',
-        'semGPA',
-        'semScore',
-        'cumGPA',
-        'cumScore'
-      ],
-      sourceHeader: false,
-      source: recordDataset
-    },
-    xAxis: [
-      {
-        type: 'category',
-        axisLabel: {
-          show: true,
-          rotate: 30
+    // console.log(recordDataset);
+    var scoreChart = echarts.init(document.getElementById('x-graph2'));
+    option = {
+        animationDuration: 1000,
+        title: { text: 'Scores Trending Plot' },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' }
         },
-        axisTick: {
-          alignWithLabel: true
-        }
-      }
-    ],
-    yAxis: [
-      {
-        type: 'value',
-        name: 'GPA',
-        min: 0,
-        max: 4.0,
-        position: 'left'
-      },
-      {
-        type: 'value',
-        name: 'Score',
-        min: 55,
-        max: 100,
-        position: 'right'
-      }
-    ],
-    series: [
-      {
-        name: '学期GPA',
-        type: 'line',
-        yAxisIndex: 0,
-        encode: {
-          x: 'sem',
-          y: 'semGPA'
-        }
-      },
-      {
-        name: '累积GPA',
-        type: 'line',
-        yAxisIndex: 0,
-        encode: {
-          x: 'sem',
-          y: 'cumGPA'
-        }
-      },
-      {
-        name: '学期平均分',
-        type: 'line',
-        yAxisIndex: 1,
-        encode: {
-          x: 'sem',
-          y: 'semScore'
-        }
-      },
-      {
-        name: '累积平均分',
-        type: 'line',
-        yAxisIndex: 1,
-        encode: {
-          x: 'sem',
-          y: 'cumScore'
-        }
-      }
-    ]
-  };
-  scoreChart.setOption(option);
-  scoreChart.on('legendselectchanged', function (params) {
-    let cnt = 0,
-      onlyKey = '';
-    for (const [key, value] of Object.entries(params.selected)) {
-      if (value) {
-        cnt++;
-        onlyKey = key;
-      }
-    }
-    // there may be a more elegant way
-    if (cnt !== 1) {
-      scoreChart.setOption({
-        series: [
-          {
-            name: '学期GPA',
-            label: {
-              show: false
+        toolbox: {
+            show: true,
+            feature: {
+                saveAsImage: {
+                    title: 'Save'
+                }
+            },
+            right: '8px'
+        },
+        legend: {
+            // orient: 'vertical',
+            bottom: '80px',
+            left: 'center'
+        },
+        dataset: {
+            dimensions: [
+                'sem',
+                'semCredits',
+                'semGPA',
+                'semScore',
+                'cumGPA',
+                'cumScore'
+            ],
+            sourceHeader: false,
+            source: recordDataset
+        },
+        xAxis: [{
+            type: 'category',
+            axisLabel: {
+                show: true,
+                rotate: 30
+            },
+            axisTick: {
+                alignWithLabel: true
             }
-          },
-          {
-            name: '累积GPA',
-            label: {
-              show: false
-            }
-          },
-          {
-            name: '学期平均分',
-            label: {
-              show: false
-            }
-          },
-          {
-            name: '累积平均分',
-            label: {
-              show: false
-            }
-          }
-        ]
-      });
-      return;
-    }
-    scoreChart.setOption({
-      series: [
+        }],
+        yAxis: [{
+            type: 'value',
+            name: 'GPA',
+            min: 0,
+            max: 4.0,
+            position: 'left'
+        },
         {
-          name: onlyKey,
-          label: {
-            show: true
-          }
+            type: 'value',
+            name: 'Score',
+            min: 55,
+            max: 100,
+            position: 'right'
         }
-      ]
+        ],
+        series: [{
+            name: '学期GPA',
+            type: 'line',
+            yAxisIndex: 0,
+            encode: {
+                x: 'sem',
+                y: 'semGPA'
+            }
+        },
+        {
+            name: '累积GPA',
+            type: 'line',
+            yAxisIndex: 0,
+            encode: {
+                x: 'sem',
+                y: 'cumGPA'
+            }
+        },
+        {
+            name: '学期平均分',
+            type: 'line',
+            yAxisIndex: 1,
+            encode: {
+                x: 'sem',
+                y: 'semScore'
+            }
+        },
+        {
+            name: '累积平均分',
+            type: 'line',
+            yAxisIndex: 1,
+            encode: {
+                x: 'sem',
+                y: 'cumScore'
+            }
+        }
+        ]
+    };
+    scoreChart.setOption(option);
+    scoreChart.on('legendselectchanged', function (params) {
+        let cnt = 0,
+            onlyKey = '';
+        for (const [key, value] of Object.entries(params.selected)) {
+            if (value) {
+                cnt++;
+                onlyKey = key;
+            }
+        }
+        // there may be a more elegant way
+        if (cnt !== 1) {
+            scoreChart.setOption({
+                series: [{
+                    name: '学期GPA',
+                    label: {
+                        show: false
+                    }
+                },
+                {
+                    name: '累积GPA',
+                    label: {
+                        show: false
+                    }
+                },
+                {
+                    name: '学期平均分',
+                    label: {
+                        show: false
+                    }
+                },
+                {
+                    name: '累积平均分',
+                    label: {
+                        show: false
+                    }
+                }
+                ]
+            });
+            return;
+        }
+        scoreChart.setOption({
+            series: [{
+                name: onlyKey,
+                label: {
+                    show: true
+                }
+            }]
+        });
     });
-  });
-  return scoreChart;
+    return scoreChart;
 }
