@@ -25,11 +25,6 @@
 
 当你通过上述两种方式之一安装本扩展后，在[武大新教务系统上](https://jwgl.whu.edu.cn/xtgl/index_initMenu.html)本扩展会自动触发。希望能够对你有点点帮助 😀
 
-## TODO
-
-- [ ] 统一 sortModal，表头和 localStorage 中的排序方式和数据
-- [ ] 重构：点表头标题排序的时候，实际上应该按`1, 2, clicked`顺序进行排序，目前是按`1, 2, 5, clicked`排序。
-
 ## 浏览器兼容性
 
 <table>
@@ -54,7 +49,7 @@
 
 非常感谢 [李叶](https://github.com/HackerLiye) 和他的 <a href="https://github.com/HackerLiye/WHU-GPA-helper" target="_blank">WHU-GPA-helper</a>项目。
 
-感谢[SalHe](https://github.com/SalHe)同学修复的导出问题和排序问题。
+感谢[SalHe](https://github.com/SalHe)同学对新教务系统其他功能的适配。
 
 ## 协议
 

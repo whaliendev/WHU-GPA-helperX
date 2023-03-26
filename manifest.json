@@ -1,7 +1,7 @@
 {
     "name": "武汉大学成绩助手X",
     "description": "新教务系统也很难用，试试这个吧！",
-    "version": "1.2.7",
+    "version": "1.3.1",
     "manifest_version": 3,
     "icons": {
         "16": "/images/purr16.png",
