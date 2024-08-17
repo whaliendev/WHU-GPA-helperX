@@ -183,12 +183,11 @@ function customStaticUI(catsList) {
         // $('#btn_sortSetting').css('display', 'none');
     }
 
-    // 如果没有添加课程选项框
-    if ($('input[name="x-selbox"]').length === 0) {
-        addCourseSelectBox(catsList);
-    } else {
-        $('input[name="x-selbox"]').prop('checked', true);
-    }
+    // 刷新课程选项框
+    // 按照原来的逻辑，请求过来的课程类别可能会在选择学年、学期后刷新，但课程选项框不会一起刷新
+    // 这里直接刷新课程选项框
+    document.querySelector('.x-controls-container')?.remove();
+    addCourseSelectBox(catsList);
 }
 
 /**
