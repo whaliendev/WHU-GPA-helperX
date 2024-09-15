@@ -166,6 +166,7 @@ function hook(object, functionKey, handler) {
 
 function fetchScores() {
     $('#searchForm .chosen-select').first().val('');
+    $('#searchForm .chosen-select').eq(1).val('');
     $('#searchForm .chosen-select').last().val('');
     $('.chosen-single span').text('全部');
 
