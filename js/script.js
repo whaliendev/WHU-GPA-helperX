@@ -132,7 +132,7 @@ function customDynamicUI() {
 
     const catsList = []; // 获取课程类别的数组，未去重
     $('table:eq(1) tr:gt(0)').each(function () {
-        const score = parseFloat($(this).find('td:eq(7)').text());
+        const score = parseFloat($(this).find('td:eq(22)').text());
         if (score >= 60.0) {
             $(this)
                 .find('td:eq(3)')
@@ -635,7 +635,7 @@ function calcSemGPA(year, sem) {
             let row = [];
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                 $(this)
-                    .find('td:eq(6), td:eq(7), td:eq(9)')
+                    .find('td:eq(6), td:eq(22), td:eq(8)')
                     .each(function () {
                         row.push($.trim($(this).text()));
                     });
@@ -656,7 +656,7 @@ function updateHeaderScores() {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
             $(this)
-                .find('td:eq(6), td:eq(7), td:eq(9)')
+                .find('td:eq(6), td:eq(22), td:eq(8)')
                 .each(function () {
                     row.push($.trim($(this).text()));
                 });
@@ -685,7 +685,7 @@ function updateSemScores() {
                 let row = [];
                 if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                     $(this)
-                        .find('td:eq(6), td:eq(7), td:eq(9)')
+                        .find('td:eq(6), td:eq(22), td:eq(8)')
                         .each(function () {
                             row.push($.trim($(this).text()));
                         });
