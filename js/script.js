@@ -141,7 +141,7 @@ function customDynamicUI() {
                 );
 
             const courseCat = $.trim($(this).find('td:eq(5)').text());
-            const courseIns = $.trim($(this).find('td:eq(12)').text());
+            const courseIns = $.trim($(this).find('td:eq(11)').text());
             // console.log(faculty, courseCat, courseIns);
             if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
                 $(this)
@@ -615,7 +615,7 @@ function calcGPA(scores) {
         scoreMean = totalScore / totalCredits;
     }
 
-    return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(3)];
+    return [totalCredits.toFixed(1), scoreMean.toFixed(3), GPAMean.toFixed(3)];
 }
 
 /**
