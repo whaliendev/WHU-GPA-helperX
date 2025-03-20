@@ -141,7 +141,7 @@ function customDynamicUI() {
                 );
 
             const courseCat = $.trim($(this).find('td:eq(5)').text());
-            const courseIns = $.trim($(this).find('td:eq(12)').text());
+            const courseIns = $.trim($(this).find('td:eq(11)').text());
             // console.log(faculty, courseCat, courseIns);
             if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
                 $(this)
