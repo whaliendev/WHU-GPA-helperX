@@ -379,7 +379,19 @@ function bindAllSortsModeEvent() {
  */
 function bindEvents() {
     // 响应表格中的复选框
-    $('input[name="x-course-select"]').change(() => updateAllScores());
+    $('input[name="x-course-select"]').change(() => {
+        // 根据表格中选择的课程类别更新对应课程类别复选框的状态
+        // 如果存在对应课程被选中，则课程类别复选框为勾选状态；否则取消勾选
+        $('input[name="x-selbox"]').each(function() {
+            const category = $(this).val();
+            const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function() {
+                return $(this).find('td:eq(5)').text() === category &&
+                       $(this).find('input[name="x-course-select"]').is(':checked');
+            }).length > 0;
+            $(this).prop('checked', hasCheckedCourse);
+        });
+        updateAllScores();
+    });
 
     // 响应课程类别复选框
     $('input[name="x-selbox"]').change((e) => {
@@ -413,6 +425,14 @@ function bindEvents() {
         let checked = $('input[name="x-course-select"]:checked');
         $('input[name="x-course-select"]:not(:checked)').prop('checked', true);
         checked.prop('checked', false);
+        $('input[name="x-selbox"]').each(function() {
+            const category = $(this).val();
+            const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function() {
+                return $(this).find('td:eq(5)').text() === category &&
+                       $(this).find('input[name="x-course-select"]').is(':checked');
+            }).length > 0;
+            $(this).prop('checked', hasCheckedCourse);
+        });
         updateAllScores();
     });
 
@@ -587,22 +607,22 @@ function comparator(indexes) {
 
 /**
  * 计算传入课程的总学分数，平均GPA，平均分
- * @param {number[][3]} scores 包含需要计算的每门课程的[学分，成绩，GPA]的float数组
+ * @param {number[][3]} scores 包含需要计算的每门课程的[学分，GPA，成绩]的float数组
  * @returns 返回一个含三个元素的数组，分别对应总学分数，平均GPA，平均分
  */
 function calcGPA(scores) {
-    let totalScore = 0,
-        totalCredits = 0,
+    let totalCredits = 0,
         totalGPA = 0;
+        totalScore = 0,
     $(scores).each(function () {
         let credit = parseFloat($(this)[0]);
-        let score = parseFloat($(this)[1]);
-        let GPA = parseFloat($(this)[2]);
+        let GPA = parseFloat($(this)[1]);
+        let score = parseFloat($(this)[2]);
 
         if (score) {
             // if not NaN
-            totalScore += score * credit;
             totalGPA += GPA * credit;
+            totalScore += score * credit;
         }
         totalCredits += credit;
     });
@@ -615,7 +635,7 @@ function calcGPA(scores) {
         scoreMean = totalScore / totalCredits;
     }
 
-    return [totalCredits.toFixed(1), scoreMean.toFixed(3), GPAMean.toFixed(3)];
+    return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(3)];
 }
 
 /**
@@ -631,11 +651,11 @@ function calcSemGPA(year, sem) {
             $(this).find('td:eq(1)').text() === year &&
             parseInt($(this).find('td:eq(2)').text()) === sem
         ) {
-            // 学分，成绩，GPA
+            // 学分，GPA，成绩
             let row = [];
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                 $(this)
-                    .find('td:eq(6), td:eq(22), td:eq(8)')
+                    .find('td:eq(6), td:eq(8), td:eq(22)')
                     .each(function () {
                         row.push($.trim($(this).text()));
                     });
@@ -656,7 +676,7 @@ function updateHeaderScores() {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
             $(this)
-                .find('td:eq(6), td:eq(22), td:eq(8)')
+                .find('td:eq(6), td:eq(8), td:eq(22)')
                 .each(function () {
                     row.push($.trim($(this).text()));
                 });
@@ -685,7 +705,7 @@ function updateSemScores() {
                 let row = [];
                 if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                     $(this)
-                        .find('td:eq(6), td:eq(22), td:eq(8)')
+                        .find('td:eq(6), td:eq(8), td:eq(22)')
                         .each(function () {
                             row.push($.trim($(this).text()));
                         });
@@ -703,6 +723,11 @@ function updateSemScores() {
  * 更新界面上的所有成绩信息
  */
 function updateAllScores() {
+    if ($('input[name="x-course-select"]:checked').length > 0) {
+        $('#x-sel-all').text('全不选');
+    } else {
+        $('#x-sel-all').text('全选');
+    }
     updateHeaderScores();
     updateSemScores();
 }
