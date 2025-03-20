@@ -587,7 +587,7 @@ function comparator(indexes) {
 
 /**
  * 计算传入课程的总学分数，平均GPA，平均分
- * @param {number[][3]} scores 包含需要计算的每门课程的[学分，成绩，GPA]的float数组
+ * @param {number[][3]} scores 包含需要计算的每门课程的[学分，GPA，成绩]的float数组
  * @returns 返回一个含三个元素的数组，分别对应总学分数，平均GPA，平均分
  */
 function calcGPA(scores) {
@@ -596,8 +596,8 @@ function calcGPA(scores) {
         totalGPA = 0;
     $(scores).each(function () {
         let credit = parseFloat($(this)[0]);
-        let score = parseFloat($(this)[1]);
-        let GPA = parseFloat($(this)[2]);
+        let GPA = parseFloat($(this)[1]);
+        let score = parseFloat($(this)[2]);
 
         if (score) {
             // if not NaN
@@ -635,7 +635,7 @@ function calcSemGPA(year, sem) {
             let row = [];
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                 $(this)
-                    .find('td:eq(6), td:eq(22), td:eq(8)')
+                    .find('td:eq(6), td:eq(8), td:eq(22)')
                     .each(function () {
                         row.push($.trim($(this).text()));
                     });
@@ -656,7 +656,7 @@ function updateHeaderScores() {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
             $(this)
-                .find('td:eq(6), td:eq(22), td:eq(8)')
+                .find('td:eq(6), td:eq(8), td:eq(22)')
                 .each(function () {
                     row.push($.trim($(this).text()));
                 });
@@ -685,7 +685,7 @@ function updateSemScores() {
                 let row = [];
                 if ($(this).find('input[name="x-course-select"]').is(':checked')) {
                     $(this)
-                        .find('td:eq(6), td:eq(22), td:eq(8)')
+                        .find('td:eq(6), td:eq(8), td:eq(22)')
                         .each(function () {
                             row.push($.trim($(this).text()));
                         });
