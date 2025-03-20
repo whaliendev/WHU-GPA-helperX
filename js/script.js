@@ -615,7 +615,7 @@ function calcGPA(scores) {
         scoreMean = totalScore / totalCredits;
     }
 
-    return [totalCredits.toFixed(1), GPAMean.toFixed(3), scoreMean.toFixed(3)];
+    return [totalCredits.toFixed(1), scoreMean.toFixed(3), GPAMean.toFixed(3)];
 }
 
 /**
