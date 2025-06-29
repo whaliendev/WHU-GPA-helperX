@@ -20,7 +20,7 @@ let plots = null; // 全局变量，画图的echartsInstance实例，方便关�
 let creditsDataset = [];
 
 // 每学期的成绩记录数组
-// Array of Array[semester, credits count, average GPa, cumu GPA, average score, cumu score]
+// Array of Array[semester, credits count, average GPA, cumu GPA, average score, cumu score]
 let recordDataset = [];
 
 /***** end of 图表相关的全局变量 *****/
