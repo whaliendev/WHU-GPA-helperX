@@ -44,29 +44,28 @@ $.ajaxSetup({
                 fromUpdateGrades = true;
             }
         } catch (error) {
-            // console.log(error);
         }
         return data;
     }
 });
 
-$(window).unload(function () {
-    localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
-});
+// $(window).unload(function () {
+//     localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
+// });
 
-function loadConfig() {
-    const json = localStorage.getItem(KEY_CONFIG);
-    const maybe = JSON.parse(json);
-    if (maybe && maybe['sorts']) {  // 务必进行校验和对配置进行迁移
-        _config = maybe;
-    }
-}
+// function loadConfig() {
+//     const json = localStorage.getItem(KEY_CONFIG);
+//     const maybe = JSON.parse(json);
+//     if (maybe && maybe['sorts']) {  // 务必进行校验和对配置进行迁移
+//         _config = maybe;
+//     }
+// }
 
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
 $(window).on('load', function () {
-    loadConfig();
+    // loadConfig();
 
     fetchScores();
 
@@ -88,7 +87,7 @@ $(window).on('load', function () {
                 : options
         );
         if (hookedForSort) bindAllSortsModeEvent();
-        
+
         return result;
     }
 });
