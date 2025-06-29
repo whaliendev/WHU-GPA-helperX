@@ -380,16 +380,27 @@ function bindAllSortsModeEvent() {
 function bindEvents() {
     // 响应表格中的复选框
     $('input[name="x-course-select"]').change(() => {
-        // 根据表格中选择的课程类别更新对应课程类别复选框的状态
-        // 如果存在对应课程被选中，则课程类别复选框为勾选状态；否则取消勾选
-        $('input[name="x-selbox"]').each(function() {
-            const category = $(this).val();
-            const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function() {
-                return $(this).find('td:eq(5)').text() === category &&
-                       $(this).find('input[name="x-course-select"]').is(':checked');
-            }).length > 0;
-            $(this).prop('checked', hasCheckedCourse);
-        });
+        /**
+         * The course category checkboxes are for conveniently including or excluding an entire category of courses from GPA calculation.
+         * The individual course checkboxes are for fine-grained GPA calculation control.
+         * These two features have different design intents. A better approach would be to provide UX hints to clarify their distinction.
+
+         * There's a clear bug in the current synchronization logic:
+         * If there are two or more "Cross-School Major Required" courses, and one of them is unchecked (excluded) via its course checkbox,
+         * the parent "Cross-School Major Required" category checkbox becomes checked. This contradicts the design intent of the category checkbox.
+         * 
+         * Decision: Commented out for now. Keep it simple.
+         */
+        // // 根据表格中选择的课程类别更新对应课程类别复选框的状态
+        // // 如果存在对应课程被选中，则课程类别复选框为勾选状态；否则取消勾选
+        // $('input[name="x-selbox"]').each(function () {
+        //     const category = $(this).val();
+        //     const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function () {
+        //         return $(this).find('td:eq(4)').text() === category &&
+        //             $(this).find('input[name="x-course-select"]').is(':checked');
+        //     }).length > 0;
+        //     $(this).prop('checked', hasCheckedCourse);
+        // });
         updateAllScores();
     });
 
@@ -433,6 +444,15 @@ function bindEvents() {
             }).length > 0;
             $(this).prop('checked', hasCheckedCourse);
         });
+        // See line 394-404 for the reason why this is commented out.
+        // $('input[name="x-selbox"]').each(function () {
+        //     const category = $(this).val();
+        //     const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function () {
+        //         return $(this).find('td:eq(4)').text() === category &&
+        //             $(this).find('input[name="x-course-select"]').is(':checked');
+        //     }).length > 0;
+        //     $(this).prop('checked', hasCheckedCourse);
+        // });
         updateAllScores();
     });
 
