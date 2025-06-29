@@ -178,6 +178,22 @@ function customDynamicUI() {
     });
     customStaticUI(catsList);
     sortScores();
+    disableGPAByJWGL();
+}
+
+/**
+ * optional: 隐藏教务系统给出的GPA计算结果
+ */
+function disableGPAByJWGL() {
+    const candidateDivs = document.querySelectorAll('div.col-md-2.col-sm-2');
+
+    for (const div of candidateDivs) {
+        if (div.textContent.includes('平均学分绩点')) {
+
+            div.style.display = 'none';
+            break;
+        }
+    }
 }
 
 /**
@@ -430,9 +446,15 @@ function bindEvents() {
         const input = e.target;
         $('table:eq(1) tr:gt(0)').each(function () {
             if ($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text() === input.value) {
-                $(this)
-                    .find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`)
-                    .prop('checked', input.checked);
+                const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
+                const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+                
+                // 撤销课程（成绩为'W'）永远不被选中
+                if (score === 'W') {
+                    checkbox.prop('checked', false);
+                } else {
+                    checkbox.prop('checked', input.checked);
+                }
             }
         });
         updateAllScores();
