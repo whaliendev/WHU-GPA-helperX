@@ -3,15 +3,6 @@ let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
 
 const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
 
-// 排序字段的默认值，其中true表示升序，false表示降序
-let _config = {
-    sorts: {
-        1: true, // 学年
-        2: true, // 学期
-        5: false, // 课程性质
-    }
-};
-
 /***** 图表相关的全局变量 *****/
 
 let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
@@ -24,6 +15,29 @@ let creditsDataset = [];
 let recordDataset = [];
 
 /***** end of 图表相关的全局变量 *****/
+
+
+/***** 不同含义列的索引 *****/
+const COL_INDEX = {
+    COURSE_YEAR: 0, // 学年
+    COURSE_SEMESTER: 1, // 学期
+    COURSE_CODE: 2, // 课程代码/选择框
+    COURSE_CATEGORY: 4, // 课程类别
+    COURSE_CREDITS: 5, // 学分
+    COURSE_SCORE: 6, // 成绩
+    COURSE_GPA: 8, // GPA
+    COURSE_INSTITUTION: 11, // 开课学院
+    COURSE_SCORE_ALT: 22, // 备用成绩字段（用于某些函数）
+};
+
+// 排序字段的默认值，其中true表示升序，false表示降序
+let _config = {
+    sorts: {
+        [COL_INDEX.COURSE_YEAR]: true, // 学年
+        [COL_INDEX.COURSE_SEMESTER]: true, // 学期
+        [COL_INDEX.COURSE_CATEGORY]: false, // 课程性质
+    }
+};
 
 /**
  * 获取学院名
@@ -122,6 +136,7 @@ function customDynamicUI() {
     // 过滤不是获取成绩的请求
     if ($('table:eq(1) tr:gt(0)').length <= 2) return;
 
+    // 课程代码一般来说比较无意义，所以我们直接替换为“选择”复选框
     $('#jqgh_tabGrid_kch')
         .contents()
         .filter(function () {
@@ -131,27 +146,35 @@ function customDynamicUI() {
 
     const catsList = []; // 获取课程类别的数组，未去重
     $('table:eq(1) tr:gt(0)').each(function () {
-        const score = parseFloat($(this).find('td:eq(22)').text());
-        if (score >= 60.0) {
-            $(this)
-                .find('td:eq(3)')
-                .html(
-                    `<input type="checkbox" name="x-course-select" checked="checked" />`
-                );
+        const scoreText = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
 
-            const courseCat = $.trim($(this).find('td:eq(5)').text());
-            const courseIns = $.trim($(this).find('td:eq(11)').text());
-            // console.log(faculty, courseCat, courseIns);
-            if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
-                $(this)
-                    .find('td:eq(5)')
-                    .text('跨院' + courseCat);
-            }
-            catsList.push($.trim($(this).find('td:eq(5)').text()));
-        } else {
+        // 撤销课程（成绩为'W'）默认不选中，且不加入课程类别列表
+        if (scoreText === 'W') {
             $(this)
-                .find('td:eq(3)')
+                .find(`td:eq(${COL_INDEX.COURSE_CODE})`)
                 .html(`<input type="checkbox" name="x-course-select" />`);
+        } else {
+            const score = parseFloat(scoreText);
+            if (score >= 60.0) {
+                $(this)
+                    .find(`td:eq(${COL_INDEX.COURSE_CODE})`)
+                    .html(
+                        `<input type="checkbox" name="x-course-select" checked="checked" />`
+                    );
+
+                const courseCat = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text());
+                const courseIns = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_INSTITUTION})`).text());
+                if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
+                    $(this)
+                        .find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`)
+                        .text('跨院' + courseCat);
+                }
+                catsList.push($.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text()));
+            } else {
+                $(this)
+                    .find(`td:eq(${COL_INDEX.COURSE_CODE})`)
+                    .html(`<input type="checkbox" name="x-course-select" />`);
+            }
         }
     });
     customStaticUI(catsList);
@@ -206,8 +229,8 @@ function sortScores() {
     $('table:eq(1)')
         .find('tr:gt(0)')
         .each(function () {
-            let year = $(this).find('td:eq(1)').text();
-            let sem = parseInt($(this).find('td:eq(2)').text());
+            let year = $(this).find(`td:eq(${COL_INDEX.COURSE_YEAR})`).text();
+            let sem = parseInt($(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text());
             if (time[0] !== year || time[1] !== sem) {
                 let semGPA = calcSemGPA(year, sem);
                 $(this).before(`
@@ -366,9 +389,9 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
  */
 function bindAllSortsModeEvent() {
     // TODO(hwa): 考虑将列上排序（上下箭头）和小齿轮排序逻辑统一起来
-    bindSortModeEvent(_config.sorts, 1, 0);
-    bindSortModeEvent(_config.sorts, 2, 1);
-    bindSortModeEvent(_config.sorts, 5, 2);
+    bindSortModeEvent(_config.sorts, COL_INDEX.COURSE_YEAR, 0);
+    bindSortModeEvent(_config.sorts, COL_INDEX.COURSE_SEMESTER, 1);
+    bindSortModeEvent(_config.sorts, COL_INDEX.COURSE_CATEGORY, 2);
 
     $('#sort_table_body tr:eq(2) td:eq(1)').first().text('课程性质');
 }
@@ -407,9 +430,9 @@ function bindEvents() {
     $('input[name="x-selbox"]').change((e) => {
         const input = e.target;
         $('table:eq(1) tr:gt(0)').each(function () {
-            if ($(this).find('td:eq(5)').text() === input.value) {
+            if ($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text() === input.value) {
                 $(this)
-                    .find('td:eq(3) input[name="x-course-select"]')
+                    .find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`)
                     .prop('checked', input.checked);
             }
         });
@@ -419,10 +442,21 @@ function bindEvents() {
     // 全选/全不选
     $('#x-sel-all').click(() => {
         if ($('input[name="x-course-select"]:checked').length === 0) {
-            $('input[name="x-course-select"]').prop('checked', true);
+            // 全选时：选中所有非撤销课程（成绩不为'W'的课程）
+            $('table:eq(1) tr:gt(0)').each(function () {
+                const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
+                const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+
+                // 如果成绩不是'W'（非撤销课程），则选中
+                if (score !== 'W' && checkbox.length > 0) {
+                    checkbox.prop('checked', true);
+                }
+                // 撤销课程（成绩为'W'）保持不选中状态
+            });
             $('input[name="x-selbox"]').prop('checked', true);
             $('#x-sel-all').text('全不选');
         } else {
+            // 全不选：取消选中所有课程
             $('input[name="x-course-select"]').prop('checked', false);
             $('input[name="x-selbox"]').prop('checked', false);
             $('#x-sel-all').text('全选');
@@ -433,15 +467,17 @@ function bindEvents() {
     // 反选
     $('#x-sel-rev').click(() => {
         let checked = $('input[name="x-course-select"]:checked');
-        $('input[name="x-course-select"]:not(:checked)').prop('checked', true);
-        checked.prop('checked', false);
-        $('input[name="x-selbox"]').each(function() {
-            const category = $(this).val();
-            const hasCheckedCourse = $('table:eq(1) tr:gt(0)').filter(function() {
-                return $(this).find('td:eq(5)').text() === category &&
-                       $(this).find('input[name="x-course-select"]').is(':checked');
-            }).length > 0;
-            $(this).prop('checked', hasCheckedCourse);
+
+        // 反选时：只反选非撤销课程，撤销课程（成绩为'W'）保持不选中
+        $('table:eq(1) tr:gt(0)').each(function () {
+            const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
+            const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+
+            if (checkbox.length > 0 && score !== 'W') {
+                // 只对非撤销课程进行反选操作
+                checkbox.prop('checked', !checkbox.is(':checked'));
+            }
+            // 撤销课程保持不选中状态
         });
         // See line 394-404 for the reason why this is commented out.
         // $('input[name="x-selbox"]').each(function () {
@@ -458,14 +494,23 @@ function bindEvents() {
     // 复原
     $('#x-sel-revert').click(() => {
         $('table:eq(1) tr:gt(0)').each(function () {
-            const score = parseFloat($(this).find('td:eq(7)').text());
-            if (score >= 60.0) {
-                $(this).find('td:eq(3) input:checkbox').prop('checked', true);
+            const scoreText = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
+            const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input:checkbox`);
+
+            // 撤销课程（成绩为'W'）永远不选中
+            if (scoreText === 'W') {
+                checkbox.prop('checked', false);
             } else {
-                $(this).find('td:eq(3) input:checkbox').prop('checked', false);
+                // 非撤销课程：成绩 >= 60分则选中，否则不选中
+                const score = parseFloat(scoreText);
+                if (score >= 60.0) {
+                    checkbox.prop('checked', true);
+                } else {
+                    checkbox.prop('checked', false);
+                }
             }
-            $('input[name="x-selbox"]').prop('checked', true);
         });
+        $('input[name="x-selbox"]').prop('checked', true);
         updateAllScores();
         bindAllSortsModeEvent();
     });
@@ -523,7 +568,8 @@ function updateStatistics() {
     $('table:eq(1)')
         .find('tr:gt(0)')
         .each(function () {
-            const record = $(this).find('td:eq(5), td:eq(6)');
+            // category, credits
+            const record = $(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY}), td:eq(${COL_INDEX.COURSE_CREDITS})`);
 
             if (record.length === 0) {
                 // x-sem-row
@@ -667,17 +713,16 @@ function calcSemGPA(year, sem) {
     let scores = [];
     $('table:eq(1) tr:gt(0)').each(function () {
         if (
-            $(this).find('td:eq(1)').text() === year &&
-            parseInt($(this).find('td:eq(2)').text()) === sem
+            $(this).find(`td:eq(${COL_INDEX.COURSE_YEAR})`).text() === year &&
+            parseInt($(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text()) === sem
         ) {
             // 学分，GPA，成绩
             let row = [];
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-                $(this)
-                    .find('td:eq(6), td:eq(8), td:eq(22)')
-                    .each(function () {
-                        row.push($.trim($(this).text()));
-                    });
+                let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
+                let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
+                let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+                row = [credit, gpa, score];
                 scores.push(row);
             }
         }
@@ -694,11 +739,10 @@ function updateHeaderScores() {
     $('table tr:gt(0)').each(function () {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-            $(this)
-                .find('td:eq(6), td:eq(8), td:eq(22)')
-                .each(function () {
-                    row.push($.trim($(this).text()));
-                });
+            let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
+            let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
+            let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+            row = [credit, gpa, score];
             scores.push(row);
         }
     });
@@ -723,11 +767,10 @@ function updateSemScores() {
             .each(function () {
                 let row = [];
                 if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-                    $(this)
-                        .find('td:eq(6), td:eq(8), td:eq(22)')
-                        .each(function () {
-                            row.push($.trim($(this).text()));
-                        });
+                    let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
+                    let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
+                    let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+                    row = [credit, gpa, score];
                     scores.push(row);
                 }
             });
