@@ -632,8 +632,8 @@ function comparator(indexes) {
  */
 function calcGPA(scores) {
     let totalCredits = 0,
-        totalGPA = 0;
-        totalScore = 0,
+        totalGPA = 0,
+        totalScore = 0;
     $(scores).each(function () {
         let credit = parseFloat($(this)[0]);
         let GPA = parseFloat($(this)[1]);
