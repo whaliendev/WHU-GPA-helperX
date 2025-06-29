@@ -27,7 +27,6 @@ const COL_INDEX = {
     COURSE_SCORE: 6, // 成绩
     COURSE_GPA: 8, // GPA
     COURSE_INSTITUTION: 11, // 开课学院
-    COURSE_SCORE_ALT: 22, // 备用成绩字段（用于某些函数）
 };
 
 // 排序字段的默认值，其中true表示升序，false表示降序
