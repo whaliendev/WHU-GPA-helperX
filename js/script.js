@@ -2,6 +2,9 @@
 let faculty = ''; // 全局变量，储存学院名
 let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
 
+// 学期 GPA 摘要的列数
+const COL_SPAN = 23;
+
 // 不同含义列的索引
 const COL_INDEX = {
     COURSE_YEAR: 0, // 学年
@@ -279,7 +282,7 @@ function sortScores() {
                 let semGPA = calcSemGPA(year, sem);
                 $(this).before(`
               <tr class="x-sem-row">
-                  <td colspan="22" class="x-sem-info">
+                  <td colspan="${COL_SPAN}" class="x-sem-info">
                   <strong class="x-info-block">
                   <em>${year}</em>&nbsp;学年&nbsp;&nbsp;第&nbsp;<em>${sem}</em>&nbsp;学期&nbsp;&nbsp;&nbsp;&nbsp;
                   学分数：<span>${semGPA[0]}</span>&nbsp;&nbsp;&nbsp;&nbsp;
