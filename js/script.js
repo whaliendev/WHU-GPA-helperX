@@ -1,23 +1,8 @@
+/***** 基础功能相关全局变量 *****/
 let faculty = ''; // 全局变量，储存学院名
 let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
 
-const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
-
-/***** 图表相关的全局变量 *****/
-
-let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
-// 学分按课程类别的数组
-// Array[category, credits count]
-let creditsDataset = [];
-
-// 每学期的成绩记录数组
-// Array of Array[semester, credits count, average GPA, cumu GPA, average score, cumu score]
-let recordDataset = [];
-
-/***** end of 图表相关的全局变量 *****/
-
-
-/***** 不同含义列的索引 *****/
+// 不同含义列的索引
 const COL_INDEX = {
     COURSE_YEAR: 0, // 学年
     COURSE_SEMESTER: 1, // 学期
@@ -29,14 +14,38 @@ const COL_INDEX = {
     COURSE_INSTITUTION: 11, // 开课学院
 };
 
+/***** end of 基础功能相关全局变量 *****/
+
+/***** 图表相关的全局变量 *****/
+let plots = null; // 全局变量，画图的echartsInstance实例，方便关掉modal时释放资源
+// 学分按课程类别的数组
+// Array of [category, credits count]
+let creditsDataset = [];
+
+// 每学期的成绩记录数组
+// Array of [semester, credits count, average GPA, cumu GPA, average score, cumu score]
+let recordDataset = [];
+
+/***** end of 图表相关的全局变量 *****/
+
+/***** 配置相关全局变量 *****/
+const KEY_CONFIG = 'WHU-GPA-helperX.config';  // localstorage的配置key
 // 排序字段的默认值，其中true表示升序，false表示降序
 let _config = {
     sorts: {
         [COL_INDEX.COURSE_YEAR]: true, // 学年
         [COL_INDEX.COURSE_SEMESTER]: true, // 学期
         [COL_INDEX.COURSE_CATEGORY]: false, // 课程性质
-    }
+    },
+    // 强制：只能调整升降序排列，不能调整排序顺序
+    sortOrder: [
+        COL_INDEX.COURSE_YEAR,    // 学年（优先级最高）
+        COL_INDEX.COURSE_SEMESTER, // 学期
+        COL_INDEX.COURSE_CATEGORY  // 课程类别（优先级最低）
+    ]
 };
+
+/***** end of 配置相关全局变量 *****/
 
 /**
  * 获取学院名
@@ -62,23 +71,44 @@ $.ajaxSetup({
     }
 });
 
-// $(window).unload(function () {
-//     localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
-// });
+$(window).unload(function () {
+    localStorage.setItem(KEY_CONFIG, JSON.stringify(_config));
+});
 
-// function loadConfig() {
-//     const json = localStorage.getItem(KEY_CONFIG);
-//     const maybe = JSON.parse(json);
-//     if (maybe && maybe['sorts']) {  // 务必进行校验和对配置进行迁移
-//         _config = maybe;
-//     }
-// }
+function loadConfig() {
+    const json = localStorage.getItem(KEY_CONFIG);
+    if (!json) return;
+    
+    try {
+        const savedConfig = JSON.parse(json);
+        if (!savedConfig || !savedConfig.sorts) return;
+        
+        const validColumnIndexes = new Set([
+            COL_INDEX.COURSE_YEAR,
+            COL_INDEX.COURSE_SEMESTER, 
+            COL_INDEX.COURSE_CATEGORY
+        ]);
+        
+        // 迁移排序配置：只保留当前有效的列设置
+        const migratedSorts = {};
+        for (const columnIndex of validColumnIndexes) {
+            if (savedConfig.sorts.hasOwnProperty(columnIndex)) {
+                migratedSorts[columnIndex] = savedConfig.sorts[columnIndex];
+            } else {
+                migratedSorts[columnIndex] = _config.sorts[columnIndex];
+            }
+        }
+        _config.sorts = migratedSorts;
+    } catch (error) {
+        // if any error occurs, use default config, just fail silently
+    }
+}
 
 /**
  * 文档加载完成后，触发查询按钮click事件，获取全部成绩
  */
 $(window).on('load', function () {
-    // loadConfig();
+    loadConfig();
 
     fetchScores();
 
@@ -135,7 +165,7 @@ function customDynamicUI() {
     // 过滤不是获取成绩的请求
     if ($('table:eq(1) tr:gt(0)').length <= 2) return;
 
-    // 课程代码一般来说比较无意义，所以我们直接替换为“选择”复选框
+    // 替换课程代码为课程选择框
     $('#jqgh_tabGrid_kch')
         .contents()
         .filter(function () {
@@ -178,7 +208,6 @@ function customDynamicUI() {
     });
     customStaticUI(catsList);
     sortScores();
-    disableGPAByJWGL();
 }
 
 /**
@@ -202,6 +231,8 @@ function disableGPAByJWGL() {
  */
 function customStaticUI(catsList) {
     $('#topButton')[0].onclick = null;
+    disableGPAByJWGL();
+
     // 如果没有添加Button控件和图表Modal
     if ($('#x-sel-all').length === 0) {
         addButtons();
@@ -215,10 +246,8 @@ function customStaticUI(catsList) {
      */
     if ($('#div-data .col-md-10.col-sm-10').length !== 0) {
         let fmBlock = $('#div-data .col-md-10.col-sm-10');
-        // console.log(fmBlock[0]);
         fmBlock.before(fmBlock.contents());
         fmBlock.css('display', 'none');
-        // $('#btn_sortSetting').css('display', 'none');
     }
 
     // 如果没有添加课程选项框
@@ -378,7 +407,6 @@ function addHeaderPanel() {
  * 齿轮调出的modal）
  */
 function bindSortModeEvent(sorts, sortId, elementIndex) {
-    // Note(hwa): 暂时不考虑i18n适配
     const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
     const modes = {
         0: "升序",
@@ -663,11 +691,12 @@ function getCellValue(row, index) {
 }
 
 /**
- * 根据传入的列索引数组，返回一个依次比较各列的比较器函数
- * @param {Array} indexes 包含需要作为排序标准的列索引值，0-based, 顺序很重要
+ * 根据传入的排序配置对象，返回一个依次比较各列的比较器函数
+ * @param {Object} sorts 包含列索引和排序方向的配置对象，格式为 {columnIndex: isAscending}
+ *                       其中 columnIndex 为列索引（0-based），isAscending 为布尔值（true表示升序）
  * @returns 返回一个comparator function
  */
-function comparator(indexes) {
+function comparator(sorts) {
 
     const compare = (valA, valB) => {
         if ($.isNumeric(valA) && $.isNumeric(valB)) {
@@ -679,12 +708,15 @@ function comparator(indexes) {
     return function (a, b) {
         let ans = 0;
 
-        for (const i in indexes) {
-            let valA = getCellValue(a, i),
-                valB = getCellValue(b, i);
+        // 使用明确定义的排序顺序，而不是依赖属性枚举顺序
+        for (const columnIndex of _config.sortOrder) {
+            const isAscending = sorts[columnIndex];
+            
+            let valA = getCellValue(a, columnIndex),
+                valB = getCellValue(b, columnIndex);
 
             const r = compare(valA, valB);
-            ans = ans || ((indexes[i] ? 1 : -1) * r);
+            ans = ans || ((isAscending ? 1 : -1) * r);
             if (ans) break;
         }
         return ans;
