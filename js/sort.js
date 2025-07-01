@@ -68,7 +68,7 @@ function comparator(sortModes, sortOrder) {
  * @param {object} sorts 排序模式对象
  * @param {number} sortId 在表格中列号， 0-based
  * @param {number} elementIndex 在sort_table_body中排序选项所在行号（sort_table_body属于左上角小
- * 齿轮调出的modal）
+ * 箭头调出的modal）
  */
 function bindSortModeEvent(sorts, sortId, elementIndex) {
     const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
