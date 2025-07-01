@@ -99,6 +99,11 @@
   border: 0;
 }
 
+/* 覆盖教务系统的自动斑马纹效果，确保学期信息行不受影响 */
+.ui-jqgrid-btable tr.x-sem-row {
+  background: transparent !important;
+}
+
 .x-sem-info {
   border-bottom: 1px solid #e1e1e1;
   padding: 4px 15px;
@@ -115,10 +120,6 @@
 .x-info-block span {
   color: #0076c1;
   font-weight: bold;
-}
-
-.x-alt {
-  background-color: #f4f4f4;
 }
 
 /*********************************  图表   *************************************/
