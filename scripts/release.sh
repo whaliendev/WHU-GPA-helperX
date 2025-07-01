@@ -89,6 +89,27 @@ check_git_tag() {
     fi
 }
 
+check_uncommitted_changes() {
+    info_msg "Checking for uncommitted changes"
+
+    if ! git diff-index --quiet HEAD --; then
+        error_exit "You have uncommitted changes. Please commit or stash them before creating a release."
+    fi
+
+    success_msg "Working directory is clean"
+}
+
+commit_version_changes() {
+    local version="$1"
+
+    info_msg "Committing version changes"
+
+    git add package.json manifest.json
+    git commit -m "Bump version to ${version}"
+
+    success_msg "Version changes committed"
+}
+
 package_extension() {
     local version="$1"
 
@@ -125,16 +146,6 @@ create_git_tag() {
     local tag="v${version}"
 
     info_msg "Creating git tag: ${tag}"
-
-    # Check for uncommitted changes
-    if ! git diff-index --quiet HEAD --; then
-        warn_msg "You have uncommitted changes."
-        read -p "Continue creating tag? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            error_exit "Tag creation cancelled"
-        fi
-    fi
 
     git tag -a "${tag}" -m "Release ${tag}"
     success_msg "Git tag ${tag} created successfully!"
@@ -202,12 +213,15 @@ check_project_root
 
 if [[ "$COMMAND" == "release" ]]; then
     check_git_tag "$VERSION"
+    # Check for uncommitted changes before making any modifications
+    check_uncommitted_changes
 fi
 
 update_version "$VERSION"
 package_extension "$VERSION"
 
 if [[ "$COMMAND" == "release" ]]; then
+    commit_version_changes "$VERSION"
     create_git_tag "$VERSION"
 fi
 
