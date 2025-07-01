@@ -34,7 +34,14 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "js/script.js",
+                "js/util.js",
+                "js/config.js",
+                "js/calculator.js", 
+                "js/sort.js",
+                "js/ui-builder.js",
+                "js/charts.js",
+                "js/events.js",
+                "js/core.js",
                 "js/echarts.min.js"
             ],
             "matches": [
