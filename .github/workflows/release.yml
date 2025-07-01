@@ -61,7 +61,7 @@ jobs:
         client-id: ${{ secrets.CHROME_CLIENT_ID }}
         client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
         refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
-        file-path: dist/extension-${{ steps.get_version.outputs.version }}.zip
+        file-path: dist/WHU-GPA-helperX-v${{ steps.get_version.outputs.version_number }}.zip
         publish: true
 
     - name: Create GitHub Release
@@ -71,7 +71,7 @@ jobs:
         name: Release ${{ steps.get_version.outputs.version }}
         body: ${{ steps.changelog.outputs.changelog }}
         files: |
-          dist/extension-${{ steps.get_version.outputs.version }}.zip
+          dist/WHU-GPA-helperX-v${{ steps.get_version.outputs.version_number }}.zip
         draft: false
         prerelease: false
       env:

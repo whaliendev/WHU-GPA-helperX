@@ -60,20 +60,22 @@ update_version() {
 
     info_msg "Updating version to ${version}"
 
-    # Update package.json
-    if command -v jq >/dev/null 2>&1; then
-        jq --arg v "$version" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
+    # Update package.json (use sed to preserve formatting)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        sed -i '' "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" package.json
     else
-        sed -i.bak "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" package.json
-        rm -f package.json.bak
+        # Linux
+        sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" package.json
     fi
 
-    # Update manifest.json
-    if command -v jq >/dev/null 2>&1; then
-        jq --arg v "$version" '.version = $v' manifest.json > manifest.json.tmp && mv manifest.json.tmp manifest.json
+    # Update manifest.json (use sed to preserve formatting)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        sed -i '' "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" manifest.json
     else
-        sed -i.bak "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" manifest.json
-        rm -f manifest.json.bak
+        # Linux
+        sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$version\"/" manifest.json
     fi
 
     success_msg "Version updated in package.json and manifest.json"
