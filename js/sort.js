@@ -8,8 +8,10 @@ function buildSortConfig() {
 
     // 构建排序优先级：学年 > 学期 > 用户点击列 > 课程性质
     const sortOrder = [COL_INDEX.COURSE_YEAR, COL_INDEX.COURSE_SEMESTER];
-    if (_config.lastClickedColumn !== undefined &&
-        _config.lastClickedColumnSort !== undefined) {
+    if (
+        _config.lastClickedColumn !== undefined &&
+        _config.lastClickedColumnSort !== undefined
+    ) {
         sortModes[_config.lastClickedColumn] = _config.lastClickedColumnSort;
         sortOrder.push(_config.lastClickedColumn);
     }
@@ -55,7 +57,7 @@ function comparator(sortModes, sortOrder) {
             const valB = getCellValue(b, columnIndex);
 
             const compareResult = compare(valA, valB);
-            result = result || ((isAscending ? 1 : -1) * compareResult);
+            result = result || (isAscending ? 1 : -1) * compareResult;
             if (result) break;
         }
         return result;
@@ -64,7 +66,7 @@ function comparator(sortModes, sortOrder) {
 
 /**
  * 绑定排序模式选择的事件，改善了左上角箭头调出Modal的显示方式
- * 
+ *
  * @param {object} sorts 排序模式对象
  * @param {number} sortId 在表格中列号， 0-based
  * @param {number} elementIndex 在sort_table_body中排序选项所在行号（sort_table_body属于左上角小
@@ -73,8 +75,8 @@ function comparator(sortModes, sortOrder) {
 function bindSortModeEvent(sorts, sortId, elementIndex) {
     const prefix = `#sort_table_body tr:eq(${elementIndex}) td:eq(2) label`;
     const modes = {
-        0: "升序",
-        1: "降序",
+        0: '升序',
+        1: '降序',
     };
 
     for (const x in modes) {
@@ -87,7 +89,9 @@ function bindSortModeEvent(sorts, sortId, elementIndex) {
     }
 
     // 选中目前激活的模式
-    $(`${prefix}:eq(${sorts[sortId] ? 0 : 1})`).first().click();
+    $(`${prefix}:eq(${sorts[sortId] ? 0 : 1})`)
+        .first()
+        .click();
 }
 
 /**
@@ -135,53 +139,58 @@ function bindHeaderClickEvent() {
         }
     };
 
-    $('.ui-jqgrid-htable tr th:visible')
-        .each(function (index, th) {
-            if (index === COL_INDEX.COURSE_CODE) return;
+    $('.ui-jqgrid-htable tr th:visible').each(function (index, th) {
+        if (index === COL_INDEX.COURSE_CODE) return;
 
-            const $th = $(th);
-            const $div = $th.find('div');
-            const $sortIcon = $div.find('span.s-ico');
+        const $th = $(th);
+        const $div = $th.find('div');
+        const $sortIcon = $div.find('span.s-ico');
 
-            const isDefaultSortColumn = _config.sortOrder.includes(index);
-            if (isDefaultSortColumn && _config.sorts[index] !== undefined) {
+        const isDefaultSortColumn = _config.sortOrder.includes(index);
+        if (isDefaultSortColumn && _config.sorts[index] !== undefined) {
+            updateSortIcon($sortIcon, _config.sorts[index]);
+        } else if (
+            !isDefaultSortColumn &&
+            _config.lastClickedColumn === index &&
+            _config.lastClickedColumnSort !== undefined
+        ) {
+            updateSortIcon($sortIcon, _config.lastClickedColumnSort);
+        }
+
+        $th.unbind('click');
+
+        $div.on('click', function () {
+            if (isDefaultSortColumn) {
+                _config.sorts[index] = !_config.sorts[index];
                 updateSortIcon($sortIcon, _config.sorts[index]);
-            } else if (!isDefaultSortColumn && _config.lastClickedColumn === index && _config.lastClickedColumnSort !== undefined) {
+            } else {
+                // 非基础排序列：三态切换，且只能有一个额外列
+                if (_config.lastClickedColumn === index) {
+                    if (_config.lastClickedColumnSort === true) {
+                        _config.lastClickedColumnSort = false; // 升序 -> 降序
+                    } else {
+                        // 降序 -> 删除
+                        _config.lastClickedColumnSort = undefined;
+                        _config.lastClickedColumn = undefined;
+                    }
+                } else {
+                    // 设置新的额外排序列（覆盖）
+                    if (_config.lastClickedColumn !== undefined) {
+                        // 清除之前的额外排序列图标
+                        const prevSortIcon = $(
+                            `.ui-jqgrid-htable tr th:eq(${_config.lastClickedColumn}) div span.s-ico`
+                        );
+                        updateSortIcon(prevSortIcon, undefined);
+                    }
+                    _config.lastClickedColumnSort = true; // 新列从升序开始
+                    _config.lastClickedColumn = index;
+                }
                 updateSortIcon($sortIcon, _config.lastClickedColumnSort);
             }
 
-            $th.unbind('click');
-
-            $div.on('click', function () {
-                if (isDefaultSortColumn) {
-                    _config.sorts[index] = !_config.sorts[index];
-                    updateSortIcon($sortIcon, _config.sorts[index]);
-                } else {
-                    // 非基础排序列：三态切换，且只能有一个额外列
-                    if (_config.lastClickedColumn === index) {
-                        if (_config.lastClickedColumnSort === true) {
-                            _config.lastClickedColumnSort = false; // 升序 -> 降序
-                        } else {
-                            // 降序 -> 删除
-                            _config.lastClickedColumnSort = undefined;
-                            _config.lastClickedColumn = undefined;
-                        }
-                    } else {
-                        // 设置新的额外排序列（覆盖）
-                        if (_config.lastClickedColumn !== undefined) {
-                            // 清除之前的额外排序列图标
-                            const prevSortIcon = $(`.ui-jqgrid-htable tr th:eq(${_config.lastClickedColumn}) div span.s-ico`);
-                            updateSortIcon(prevSortIcon, undefined);
-                        }
-                        _config.lastClickedColumnSort = true; // 新列从升序开始
-                        _config.lastClickedColumn = index;
-                    }
-                    updateSortIcon($sortIcon, _config.lastClickedColumnSort);
-                }
-
-                sortScores();
-            });
+            sortScores();
         });
+    });
 }
 
 /**
@@ -209,7 +218,11 @@ function syncHeaderIcons() {
             } else {
                 ascElement.addClass('ui-state-disabled');
             }
-        } else if (!isDefaultSortColumn && _config.lastClickedColumn === index && _config.lastClickedColumnSort !== undefined) {
+        } else if (
+            !isDefaultSortColumn &&
+            _config.lastClickedColumn === index &&
+            _config.lastClickedColumnSort !== undefined
+        ) {
             // 显示额外排序列的图标
             $sortIcon.css('display', 'inline');
 
@@ -229,4 +242,4 @@ function syncHeaderIcons() {
             $sortIcon.css('display', 'none');
         }
     });
-} 
+}

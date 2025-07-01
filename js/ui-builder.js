@@ -6,7 +6,6 @@ function disableGPAByJWGL() {
 
     for (const div of candidateDivs) {
         if (div.textContent.includes('平均学分绩点')) {
-
             div.style.display = 'none';
             break;
         }
@@ -104,10 +103,12 @@ function addHeaderPanel() {
     // https://stackoverflow.com/questions/16302483/event-to-detect-when-positionsticky-is-triggered
     const headerInfo = $('.x-controls-container')[0];
     const observer = new IntersectionObserver(
-        ([e]) => e.target.classList.toggle('is-pinned', e.intersectionRatio < 1), {
-        rootMargin: '-28px 0px 0px',
-        threshold: [1]
-    }
+        ([e]) =>
+            e.target.classList.toggle('is-pinned', e.intersectionRatio < 1),
+        {
+            rootMargin: '-28px 0px 0px',
+            threshold: [1],
+        }
     );
     observer.observe(headerInfo);
 }
@@ -145,4 +146,4 @@ function customStaticUI(catsList) {
     } else {
         $('input[name="x-selbox"]').prop('checked', true);
     }
-} 
+}

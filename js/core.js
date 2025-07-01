@@ -16,10 +16,9 @@ $.ajaxSetup({
                 faculty = response['items'][0]['jgmc'];
                 fromUpdateGrades = true;
             }
-        } catch (error) {
-        }
+        } catch (error) {}
         return data;
-    }
+    },
 });
 
 /**
@@ -45,15 +44,15 @@ function hookDialog() {
         const result = originalDialog(
             hookedForSort
                 ? {
-                    ...options,
-                    buttons: {
-                        ...options.buttons,
-                        success: {
-                            ...options.buttons.success,
-                            callback: sortScores
-                        }
-                    }
-                }
+                      ...options,
+                      buttons: {
+                          ...options.buttons,
+                          success: {
+                              ...options.buttons.success,
+                              callback: sortScores,
+                          },
+                      },
+                  }
                 : options
         );
         if (hookedForSort) bindAllSortsModeEvent();
@@ -76,7 +75,7 @@ function fetchScores() {
     $('select.ui-pg-selbox').val(150);
 
     $('#search_go').trigger('click');
-};
+}
 
 /**
  * Ajax请求完成后，触发配置动态UI
@@ -102,7 +101,9 @@ function customDynamicUI() {
 
     const catsList = []; // 获取课程类别的数组，未去重
     $('table:eq(1) tr:gt(0)').each(function () {
-        const scoreText = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
+        const scoreText = $.trim(
+            $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+        );
 
         // 撤销课程（成绩为'W'）默认不选中，且不加入课程类别列表
         if (scoreText === 'W') {
@@ -118,14 +119,30 @@ function customDynamicUI() {
                         `<input type="checkbox" name="x-course-select" checked="checked" />`
                     );
 
-                const courseCat = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text());
-                const courseIns = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_INSTITUTION})`).text());
-                if (faculty && courseCat.startsWith('专业') && courseIns !== faculty) {
+                const courseCat = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text()
+                );
+                const courseIns = $.trim(
+                    $(this)
+                        .find(`td:eq(${COL_INDEX.COURSE_INSTITUTION})`)
+                        .text()
+                );
+                if (
+                    faculty &&
+                    courseCat.startsWith('专业') &&
+                    courseIns !== faculty
+                ) {
                     $(this)
                         .find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`)
                         .text('跨院' + courseCat);
                 }
-                catsList.push($.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text()));
+                catsList.push(
+                    $.trim(
+                        $(this)
+                            .find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`)
+                            .text()
+                    )
+                );
             } else {
                 $(this)
                     .find(`td:eq(${COL_INDEX.COURSE_CODE})`)
@@ -159,7 +176,9 @@ function sortScores() {
         .find('tr:gt(0)')
         .each(function () {
             let year = $(this).find(`td:eq(${COL_INDEX.COURSE_YEAR})`).text();
-            let sem = parseInt($(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text());
+            let sem = parseInt(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text()
+            );
             if (time[0] !== year || time[1] !== sem) {
                 let semGPA = calcSemGPA(year, sem);
                 $(this).before(`
@@ -183,4 +202,4 @@ function sortScores() {
 
     // 同步表头图标显示
     syncHeaderIcons();
-} 
+}

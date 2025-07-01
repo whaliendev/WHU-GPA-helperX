@@ -8,12 +8,19 @@ function bindEvents() {
     });
 
     // 响应课程类别复选框
-    $('input[name="x-selbox"]').change((e) => {
+    $('input[name="x-selbox"]').change(e => {
         const input = e.target;
         $('table:eq(1) tr:gt(0)').each(function () {
-            if ($(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text() === input.value) {
-                const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
-                const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+            if (
+                $(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY})`).text() ===
+                input.value
+            ) {
+                const score = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+                );
+                const checkbox = $(this).find(
+                    `td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`
+                );
 
                 // 撤销课程（成绩为'W'）永远不被选中
                 if (score === 'W') {
@@ -31,8 +38,12 @@ function bindEvents() {
         if ($('input[name="x-course-select"]:checked').length === 0) {
             // 全选时：选中所有非撤销课程（成绩不为'W'的课程）
             $('table:eq(1) tr:gt(0)').each(function () {
-                const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
-                const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+                const score = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+                );
+                const checkbox = $(this).find(
+                    `td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`
+                );
 
                 if (score !== 'W' && checkbox.length > 0) {
                     checkbox.prop('checked', true);
@@ -55,8 +66,12 @@ function bindEvents() {
 
         // 反选时：只反选非撤销课程，撤销课程（成绩为'W'）保持不选中
         $('table:eq(1) tr:gt(0)').each(function () {
-            const score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
-            const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`);
+            const score = $.trim(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+            );
+            const checkbox = $(this).find(
+                `td:eq(${COL_INDEX.COURSE_CODE}) input[name="x-course-select"]`
+            );
 
             if (checkbox.length > 0 && score !== 'W') {
                 checkbox.prop('checked', !checkbox.is(':checked'));
@@ -68,8 +83,12 @@ function bindEvents() {
     // 复原
     $('#x-sel-revert').click(() => {
         $('table:eq(1) tr:gt(0)').each(function () {
-            const scoreText = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());
-            const checkbox = $(this).find(`td:eq(${COL_INDEX.COURSE_CODE}) input:checkbox`);
+            const scoreText = $.trim(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+            );
+            const checkbox = $(this).find(
+                `td:eq(${COL_INDEX.COURSE_CODE}) input:checkbox`
+            );
 
             // 撤销课程（成绩为'W'）永远不选中
             if (scoreText === 'W') {

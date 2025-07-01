@@ -16,19 +16,19 @@ document.head.appendChild(echarts);
 
 // 按依赖顺序加载模块化脚本
 const scripts = [
-  'js/util.js',       // 工具函数 (最先加载)
-  'js/config.js',      // 配置和全局变量 (次优先加载)
-  'js/calculator.js',  // GPA计算功能 
-  'js/sort.js',        // 排序功能
-  'js/ui-builder.js',  // UI构建功能
-  'js/charts.js',      // 图表功能
-  'js/events.js',      // 事件绑定功能
-  'js/core.js',        // 核心业务逻辑 (最后加载)
+    'js/util.js', // 工具函数 (最先加载)
+    'js/config.js', // 配置和全局变量 (次优先加载)
+    'js/calculator.js', // GPA计算功能
+    'js/sort.js', // 排序功能
+    'js/ui-builder.js', // UI构建功能
+    'js/charts.js', // 图表功能
+    'js/events.js', // 事件绑定功能
+    'js/core.js', // 核心业务逻辑 (最后加载)
 ];
 
 // 顺序加载脚本以保证依赖关系
 scripts.forEach((scriptPath, _) => {
-  let script = document.createElement('script');
-  script.src = chrome.runtime.getURL(scriptPath);
-  document.body.appendChild(script);
+    let script = document.createElement('script');
+    script.src = chrome.runtime.getURL(scriptPath);
+    document.body.appendChild(script);
 });

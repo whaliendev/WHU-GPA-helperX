@@ -24,3 +24,6 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+
+# dev related stuffs
+TODO.md

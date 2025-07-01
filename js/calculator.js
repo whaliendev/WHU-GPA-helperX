@@ -42,14 +42,22 @@ function calcSemGPA(year, sem) {
     $('table:eq(1) tr:gt(0)').each(function () {
         if (
             $(this).find(`td:eq(${COL_INDEX.COURSE_YEAR})`).text() === year &&
-            parseInt($(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text()) === sem
+            parseInt(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_SEMESTER})`).text()
+            ) === sem
         ) {
             // 学分，GPA，成绩
             let row = [];
             if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-                let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
-                let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
-                let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+                let credit = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text()
+                ); // 学分
+                let gpa = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text()
+                ); // GPA
+                let score = $.trim(
+                    $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+                ); // 成绩
                 row = [credit, gpa, score];
                 scores.push(row);
             }
@@ -67,9 +75,15 @@ function updateHeaderScores() {
     $('table tr:gt(0)').each(function () {
         let row = [];
         if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-            let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
-            let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
-            let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+            let credit = $.trim(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text()
+            ); // 学分
+            let gpa = $.trim(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text()
+            ); // GPA
+            let score = $.trim(
+                $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+            ); // 成绩
             row = [credit, gpa, score];
             scores.push(row);
         }
@@ -94,10 +108,20 @@ function updateSemScores() {
             .nextUntil('tr.x-sem-row')
             .each(function () {
                 let row = [];
-                if ($(this).find('input[name="x-course-select"]').is(':checked')) {
-                    let credit = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_CREDITS})`).text());  // 学分
-                    let gpa = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text());     // GPA
-                    let score = $.trim($(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text());   // 成绩
+                if (
+                    $(this).find('input[name="x-course-select"]').is(':checked')
+                ) {
+                    let credit = $.trim(
+                        $(this)
+                            .find(`td:eq(${COL_INDEX.COURSE_CREDITS})`)
+                            .text()
+                    ); // 学分
+                    let gpa = $.trim(
+                        $(this).find(`td:eq(${COL_INDEX.COURSE_GPA})`).text()
+                    ); // GPA
+                    let score = $.trim(
+                        $(this).find(`td:eq(${COL_INDEX.COURSE_SCORE})`).text()
+                    ); // 成绩
                     row = [credit, gpa, score];
                     scores.push(row);
                 }
@@ -120,4 +144,4 @@ function updateAllScores() {
     }
     updateHeaderScores();
     updateSemScores();
-} 
+}

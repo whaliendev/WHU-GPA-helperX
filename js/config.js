@@ -1,6 +1,6 @@
 /***** 基础功能相关全局变量 *****/
 let faculty = ''; // 全局变量，储存学院名
-let fromUpdateGrades = false;  // 标志请求是否为更新成绩表
+let fromUpdateGrades = false; // 标志请求是否为更新成绩表
 
 // 学期 GPA 摘要的列数
 const COL_SPAN = 23;
@@ -27,7 +27,7 @@ let creditsDataset = [];
 let recordDataset = [];
 
 /***** 配置相关全局变量 *****/
-const CONFIG_KEY = 'WHU-GPA-helperX.config';  // localstorage的配置key
+const CONFIG_KEY = 'WHU-GPA-helperX.config'; // localstorage的配置key
 
 // 排序字段的默认值，其中true表示升序，false表示降序
 let _config = {
@@ -38,13 +38,13 @@ let _config = {
     },
     // 排序优先级：学年 > 学期 > 用户点击列 > 课程性质
     sortOrder: [
-        COL_INDEX.COURSE_YEAR,    // 学年（优先级最高）
+        COL_INDEX.COURSE_YEAR, // 学年（优先级最高）
         COL_INDEX.COURSE_SEMESTER, // 学期
-        COL_INDEX.COURSE_CATEGORY  // 课程性质（最后）
+        COL_INDEX.COURSE_CATEGORY, // 课程性质（最后）
     ],
     // 表头点击排序相关配置
-    lastClickedColumn: undefined,     // 额外排序列的索引
-    lastClickedColumnSort: undefined  // 额外排序列的方向：true(升序)/false(降序)/undefined(无额外排序)
+    lastClickedColumn: undefined, // 额外排序列的索引
+    lastClickedColumnSort: undefined, // 额外排序列的方向：true(升序)/false(降序)/undefined(无额外排序)
 };
 
 /**
@@ -61,7 +61,7 @@ function loadConfig() {
         const validColumnIndexes = new Set([
             COL_INDEX.COURSE_YEAR,
             COL_INDEX.COURSE_SEMESTER,
-            COL_INDEX.COURSE_CATEGORY
+            COL_INDEX.COURSE_CATEGORY,
         ]);
 
         // 迁移排序配置：只保留当前有效的列设置
@@ -76,20 +76,36 @@ function loadConfig() {
         }
         _config.sorts = migratedSorts;
 
-        if (typeof savedConfig.lastClickedColumn === 'number' || savedConfig.lastClickedColumn === undefined) {
+        if (
+            typeof savedConfig.lastClickedColumn === 'number' ||
+            savedConfig.lastClickedColumn === undefined
+        ) {
             _config.lastClickedColumn = savedConfig.lastClickedColumn;
         }
 
-        if (typeof savedConfig.lastClickedColumnSort === 'boolean' || savedConfig.lastClickedColumnSort === undefined) {
+        if (
+            typeof savedConfig.lastClickedColumnSort === 'boolean' ||
+            savedConfig.lastClickedColumnSort === undefined
+        ) {
             _config.lastClickedColumnSort = savedConfig.lastClickedColumnSort;
         }
 
         // 兼容旧版本的 headerSorts 配置
-        if (savedConfig.headerSorts && typeof savedConfig.headerSorts === 'object') {
+        if (
+            savedConfig.headerSorts &&
+            typeof savedConfig.headerSorts === 'object'
+        ) {
             // 从旧的 headerSorts 中提取第一个有效的排序设置
-            for (const [columnIndex, sortDirection] of Object.entries(savedConfig.headerSorts)) {
+            for (const [columnIndex, sortDirection] of Object.entries(
+                savedConfig.headerSorts
+            )) {
                 const colIndex = parseInt(columnIndex);
-                if (!isNaN(colIndex) && (sortDirection === true || sortDirection === false || sortDirection === undefined)) {
+                if (
+                    !isNaN(colIndex) &&
+                    (sortDirection === true ||
+                        sortDirection === false ||
+                        sortDirection === undefined)
+                ) {
                     _config.lastClickedColumn = colIndex;
                     _config.lastClickedColumnSort = sortDirection;
                     break;
@@ -109,7 +125,7 @@ function saveConfig() {
     const configToSave = {
         sorts: _config.sorts,
         lastClickedColumn: _config.lastClickedColumn,
-        lastClickedColumnSort: _config.lastClickedColumnSort
+        lastClickedColumnSort: _config.lastClickedColumnSort,
     };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(configToSave));
 }
@@ -117,4 +133,4 @@ function saveConfig() {
 // 页面卸载时自动保存配置
 $(window).unload(function () {
     saveConfig();
-}); 
+});

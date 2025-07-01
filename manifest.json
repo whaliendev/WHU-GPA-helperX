@@ -20,15 +20,9 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://jwgl.whu.edu.cn/cjcx/cjcx_cxDgXscj.html*"
-            ],
-            "js": [
-                "js/content-script.js"
-            ],
-            "css": [
-                "css/style.css"
-            ]
+            "matches": ["https://jwgl.whu.edu.cn/cjcx/cjcx_cxDgXscj.html*"],
+            "js": ["js/content-script.js"],
+            "css": ["css/style.css"]
         }
     ],
     "web_accessible_resources": [
@@ -36,7 +30,7 @@
             "resources": [
                 "js/util.js",
                 "js/config.js",
-                "js/calculator.js", 
+                "js/calculator.js",
                 "js/sort.js",
                 "js/ui-builder.js",
                 "js/charts.js",
@@ -44,9 +38,7 @@
                 "js/core.js",
                 "js/echarts.min.js"
             ],
-            "matches": [
-                "https://jwgl.whu.edu.cn/*"
-            ]
+            "matches": ["https://jwgl.whu.edu.cn/*"]
         }
     ]
 }

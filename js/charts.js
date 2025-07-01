@@ -2,7 +2,7 @@
  * 关闭modal，注意这里用到了plots全局变量来进行资源释放
  */
 function closeModal() {
-    plots.forEach((plot) => plot.dispose());
+    plots.forEach(plot => plot.dispose());
     $('#x-modal-overlay').removeClass('x-open');
 }
 
@@ -26,7 +26,9 @@ function updateStatistics() {
         .find('tr:gt(0)')
         .each(function () {
             // category, credits
-            const record = $(this).find(`td:eq(${COL_INDEX.COURSE_CATEGORY}), td:eq(${COL_INDEX.COURSE_CREDITS})`);
+            const record = $(this).find(
+                `td:eq(${COL_INDEX.COURSE_CATEGORY}), td:eq(${COL_INDEX.COURSE_CREDITS})`
+            );
 
             if (record.length === 0) {
                 // x-sem-row
@@ -36,10 +38,12 @@ function updateStatistics() {
                     emArr[0].textContent + '-' + emArr[1].textContent,
                     parseFloat(scoreArr[0].textContent),
                     parseFloat(scoreArr[1].textContent),
-                    parseFloat(scoreArr[2].textContent)
+                    parseFloat(scoreArr[2].textContent),
                 ]);
             } else {
-                if ($(this).find('input[name="x-course-select"]').is(':checked')) {
+                if (
+                    $(this).find('input[name="x-course-select"]').is(':checked')
+                ) {
                     // record row
                     const cat = record[0].textContent;
                     const credits = parseFloat(record[1].textContent);
@@ -76,14 +80,14 @@ function processData(creditsMap, trendingArray) {
 
     creditsDataset = Array.from(creditsMap)
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map((cat) => [cat[0], cat[1].toFixed(1)]);
-    recordDataset = trendingArray.map((sem) => [
+        .map(cat => [cat[0], cat[1].toFixed(1)]);
+    recordDataset = trendingArray.map(sem => [
         sem[0],
         sem[1].toFixed(1), // 学期学分数
         sem[2].toFixed(3), // 学期GPA
         sem[3].toFixed(2), // 学期平均分
         sem[4].toFixed(3), // 累积GPA
-        sem[5].toFixed(2) // 累积平均分
+        sem[5].toFixed(2), // 累积平均分
     ]);
 }
 
@@ -97,44 +101,48 @@ function drawCreditsPlot() {
     let option = {
         animationDuration: 1000,
         title: {
-            text: 'Credits by Category'
+            text: 'Credits by Category',
         },
         tooltip: {
-            show: true
+            show: true,
         },
         toolbox: {
             show: true,
             feature: {
                 saveAsImage: {
-                    title: 'Save'
-                }
+                    title: 'Save',
+                },
             },
-            right: '8px'
+            right: '8px',
         },
-        dataset: [{
-            dimensions: ['category', 'credits'],
-            sourceHeader: false,
-            source: creditsDataset /* .sort((a, b)=> a[0].length - b[0].length) */
-        }],
+        dataset: [
+            {
+                dimensions: ['category', 'credits'],
+                sourceHeader: false,
+                source: creditsDataset /* .sort((a, b)=> a[0].length - b[0].length) */,
+            },
+        ],
         xAxis: {
             type: 'category',
             axisLabel: {
                 show: true,
-                rotate: 30
-            }
+                rotate: 30,
+            },
         },
         yAxis: {
             type: 'value',
-            name: 'credits'
+            name: 'credits',
         },
-        series: [{
-            name: 'Credits',
-            type: 'bar',
-            label: {
-                show: true,
-                position: 'top'
-            }
-        }]
+        series: [
+            {
+                name: 'Credits',
+                type: 'bar',
+                label: {
+                    show: true,
+                    position: 'top',
+                },
+            },
+        ],
     };
 
     creditChart.setOption(option);
@@ -152,21 +160,21 @@ function drawScoreTrendingPlot() {
         title: { text: 'Scores Trending Plot' },
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross' }
+            axisPointer: { type: 'cross' },
         },
         toolbox: {
             show: true,
             feature: {
                 saveAsImage: {
-                    title: 'Save'
-                }
+                    title: 'Save',
+                },
             },
-            right: '8px'
+            right: '8px',
         },
         legend: {
             // orient: 'vertical',
             bottom: '80px',
-            left: 'center'
+            left: 'center',
         },
         dataset: {
             dimensions: [
@@ -175,73 +183,77 @@ function drawScoreTrendingPlot() {
                 'semGPA',
                 'semScore',
                 'cumGPA',
-                'cumScore'
+                'cumScore',
             ],
             sourceHeader: false,
-            source: recordDataset
+            source: recordDataset,
         },
-        xAxis: [{
-            type: 'category',
-            axisLabel: {
-                show: true,
-                rotate: 30
+        xAxis: [
+            {
+                type: 'category',
+                axisLabel: {
+                    show: true,
+                    rotate: 30,
+                },
+                axisTick: {
+                    alignWithLabel: true,
+                },
             },
-            axisTick: {
-                alignWithLabel: true
-            }
-        }],
-        yAxis: [{
-            type: 'value',
-            name: 'GPA',
-            min: 0,
-            max: 4.0,
-            position: 'left'
-        },
-        {
-            type: 'value',
-            name: 'Score',
-            min: 55,
-            max: 100,
-            position: 'right'
-        }
         ],
-        series: [{
-            name: '学期GPA',
-            type: 'line',
-            yAxisIndex: 0,
-            encode: {
-                x: 'sem',
-                y: 'semGPA'
-            }
-        },
-        {
-            name: '累积GPA',
-            type: 'line',
-            yAxisIndex: 0,
-            encode: {
-                x: 'sem',
-                y: 'cumGPA'
-            }
-        },
-        {
-            name: '学期平均分',
-            type: 'line',
-            yAxisIndex: 1,
-            encode: {
-                x: 'sem',
-                y: 'semScore'
-            }
-        },
-        {
-            name: '累积平均分',
-            type: 'line',
-            yAxisIndex: 1,
-            encode: {
-                x: 'sem',
-                y: 'cumScore'
-            }
-        }
-        ]
+        yAxis: [
+            {
+                type: 'value',
+                name: 'GPA',
+                min: 0,
+                max: 4.0,
+                position: 'left',
+            },
+            {
+                type: 'value',
+                name: 'Score',
+                min: 55,
+                max: 100,
+                position: 'right',
+            },
+        ],
+        series: [
+            {
+                name: '学期GPA',
+                type: 'line',
+                yAxisIndex: 0,
+                encode: {
+                    x: 'sem',
+                    y: 'semGPA',
+                },
+            },
+            {
+                name: '累积GPA',
+                type: 'line',
+                yAxisIndex: 0,
+                encode: {
+                    x: 'sem',
+                    y: 'cumGPA',
+                },
+            },
+            {
+                name: '学期平均分',
+                type: 'line',
+                yAxisIndex: 1,
+                encode: {
+                    x: 'sem',
+                    y: 'semScore',
+                },
+            },
+            {
+                name: '累积平均分',
+                type: 'line',
+                yAxisIndex: 1,
+                encode: {
+                    x: 'sem',
+                    y: 'cumScore',
+                },
+            },
+        ],
     };
     scoreChart.setOption(option);
     scoreChart.on('legendselectchanged', function (params) {
@@ -256,42 +268,45 @@ function drawScoreTrendingPlot() {
         // there may be a more elegant way
         if (cnt !== 1) {
             scoreChart.setOption({
-                series: [{
-                    name: '学期GPA',
-                    label: {
-                        show: false
-                    }
-                },
-                {
-                    name: '累积GPA',
-                    label: {
-                        show: false
-                    }
-                },
-                {
-                    name: '学期平均分',
-                    label: {
-                        show: false
-                    }
-                },
-                {
-                    name: '累积平均分',
-                    label: {
-                        show: false
-                    }
-                }
-                ]
+                series: [
+                    {
+                        name: '学期GPA',
+                        label: {
+                            show: false,
+                        },
+                    },
+                    {
+                        name: '累积GPA',
+                        label: {
+                            show: false,
+                        },
+                    },
+                    {
+                        name: '学期平均分',
+                        label: {
+                            show: false,
+                        },
+                    },
+                    {
+                        name: '累积平均分',
+                        label: {
+                            show: false,
+                        },
+                    },
+                ],
             });
             return;
         }
         scoreChart.setOption({
-            series: [{
-                name: onlyKey,
-                label: {
-                    show: true
-                }
-            }]
+            series: [
+                {
+                    name: onlyKey,
+                    label: {
+                        show: true,
+                    },
+                },
+            ],
         });
     });
     return scoreChart;
-} 
+}
