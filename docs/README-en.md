@@ -51,7 +51,7 @@ Many thanks to [HackerLiye](https://github.com/HackerLiye) and his open source p
 
 [GPLv3](LICENSE)
 
-<center>Copyright © 2021 Hwa</center>
+<center>Copyright © 2025 Hwa</center>
 
 ---
 

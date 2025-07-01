@@ -49,14 +49,16 @@
 
 非常感谢 [李叶](https://github.com/HackerLiye) 和他的 <a href="https://github.com/HackerLiye/WHU-GPA-helper" target="_blank">WHU-GPA-helper</a>项目。
 
-感谢[SalHe](https://github.com/SalHe)同学对新教务系统其他功能的适配。
+感谢[SalHe](https://github.com/SalHe)同学对新教务系统成绩导出功能和排序功能的适配。
+
+感谢[Embrace](https://github.com/Asxjdb)同学和[Ll0veU](https://github.com/Ll0veU)同学对教务系统更新做出的持续适配。
 
 ## 协议
 
 [GPLv3](LICENSE)
 
-<center>Copyright © 2023 Hwa</center>
+<center>Copyright © 2025 Hwa</center>
 
 ---
 
-<p align="center"><b>如果觉得本项目还不错，欢迎留个star。:star: :arrow_up:. </b></p>
+<p align="center"><b>如果觉得本项目还不错，欢迎留个star :star: :arrow_up: 。 </b></p>
