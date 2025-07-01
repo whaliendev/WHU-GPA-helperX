@@ -1,0 +1,15 @@
+# 压缩文件和第三方库
+*.min.js
+*.min.css
+js/echarts.min.js
+
+# 依赖和构建输出
+node_modules/
+dist/
+build/
+
+# 其他不需要格式化的文件
+LICENSE
+*.md
+*.log
+.git/

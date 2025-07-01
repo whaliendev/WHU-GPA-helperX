@@ -1,0 +1,29 @@
+{
+    "name": "WHU-GPA-helperX",
+    "version": "1.4.0",
+    "description": "武汉大学成绩助手X - 新教务系统GPA计算器",
+    "private": true,
+    "scripts": {
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "prepare": "husky"
+    },
+    "devDependencies": {
+        "prettier": "^3.0.0",
+        "husky": "^9.0.0",
+        "lint-staged": "^16.0.0"
+    },
+    "keywords": [
+        "chrome-extension",
+        "whu",
+        "gpa",
+        "calculator"
+    ],
+    "author": "Hwa",
+    "license": "GPL-3.0",
+    "lint-staged": {
+        "*.{js,json,html,css}": [
+            "prettier --write"
+        ]
+    }
+}
